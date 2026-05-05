@@ -1,4 +1,4 @@
-# Tiros Libres MVP
+# Tiros Libres MVP - v1
 
 Juego web de tiros libres inspirado en Football Strike, construido con Vite, TypeScript y Phaser.
 
