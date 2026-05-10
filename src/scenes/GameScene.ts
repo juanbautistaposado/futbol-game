@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import { getBestScore, getKeeperDifficulty, getPlayerAppearance, getSelectedPlayerCount, getSelectedShotCount, saveBestScore } from "../storage";
 import type { KeeperDifficulty, KeeperLane, KeeperState, PlayerAppearance, PlayerHairColor, RoundResultPlayer, RoundSetupData, RoundState, ShotInput, ShotResult } from "../types";
+import { PrecisionBar } from "./PrecisionBar";
 
 const GOAL = new Phaser.Geom.Rectangle(314, 108, 396, 178);
 const GOAL_CENTER = new Phaser.Math.Vector2(512, 198);
@@ -118,6 +119,7 @@ export class GameScene extends Phaser.Scene {
   private bestText!: Phaser.GameObjects.Text;
   private feedbackText!: Phaser.GameObjects.Text;
   private instructionText!: Phaser.GameObjects.Text;
+  private precisionBar!: PrecisionBar;
   private round!: RoundState;
   private keeperState!: KeeperState;
   private keeperIdleTween?: Phaser.Tweens.Tween;
@@ -164,6 +166,14 @@ export class GameScene extends Phaser.Scene {
     this.goalFlash = this.add.graphics().setDepth(12);
     this.createActors();
     this.createHud();
+    this.precisionBar = new PrecisionBar({
+      x: 512,
+      y: 100,
+      width: 300,
+      height: 40,
+      scene: this
+    });
+    this.precisionBar.hide();
     this.registerInput();
     this.resetShot();
   }
@@ -171,6 +181,7 @@ export class GameScene extends Phaser.Scene {
   update(): void {
     if (this.round.phase === "aiming") {
       this.drawAim();
+      this.precisionBar.update();
     }
   }
 
@@ -322,6 +333,7 @@ export class GameScene extends Phaser.Scene {
       this.dragStart.set(this.ballStartPosition.x, this.ballStartPosition.y);
       this.dragEnd.set(pointer.x, pointer.y);
       this.feedbackText.setVisible(false);
+      this.precisionBar.show();
     });
 
     this.input.on("pointermove", (pointer: Phaser.Input.Pointer) => {
@@ -339,6 +351,7 @@ export class GameScene extends Phaser.Scene {
 
       this.dragEnd.set(pointer.x, pointer.y);
       const shotInput = this.createShotInput();
+      this.precisionBar.hide();
 
       if (shotInput.power < 0.12 || shotInput.direction.y > -0.12) {
         this.round.phase = "ready";
@@ -377,8 +390,18 @@ export class GameScene extends Phaser.Scene {
     this.aimGraphics.clear();
     this.instructionText.setText("");
 
-    const target = this.calculateTarget(shotInput);
-    const resolution = this.resolveShot(target);
+    let target = this.calculateTarget(shotInput);
+    const precisionMultiplier = this.precisionBar.getPrecisionMultiplier();
+    
+    // Desviar el tiro según la precisión (más desviación cuanto menor sea la precisión)
+    if (precisionMultiplier < 1.0) {
+      const deviation = (1 - precisionMultiplier) * 200; // Desviación 0-200 píxeles
+      const isAimingRight = target.x > GOAL_CENTER.x;
+      const direction = isAimingRight ? 1 : -1; // Ir más en la dirección que apuntaba
+      target.x += deviation * direction;
+    }
+    
+    const resolution = this.resolveShot(target, precisionMultiplier);
     const duration = Phaser.Math.Linear(980, 660, shotInput.power);
     const control = new Phaser.Math.Vector2(
       (this.ballStartPosition.x + target.x) / 2 + shotInput.direction.x * 96,
@@ -440,7 +463,7 @@ export class GameScene extends Phaser.Scene {
     );
   }
 
-  private resolveShot(target: Phaser.Math.Vector2): ShotResolution {
+  private resolveShot(target: Phaser.Math.Vector2, precisionMultiplier: number = 1.0): ShotResolution {
     const keeperConfig = KEEPER_DIFFICULTY_CONFIG[this.keeperDifficulty];
     const postImpact = this.getPostImpact(target);
 
@@ -469,7 +492,7 @@ export class GameScene extends Phaser.Scene {
     const targetIsCentral = Math.abs(target.x - GOAL_CENTER.x) < 56;
     const targetIsCorner = target.x < GOAL.x + 92 || target.x > GOAL.right - 92;
     const targetIsHigh = target.y <= 150;
-    const saveChance = targetIsHigh
+    let saveChance = targetIsHigh
       ? targetIsCentral
         ? keeperConfig.highCentralSaveChance
         : targetIsCorner
@@ -478,6 +501,9 @@ export class GameScene extends Phaser.Scene {
       : targetIsCentral
         ? keeperConfig.centralSaveChance
         : keeperConfig.sideSaveChance;
+
+    // Aplicar multiplicador de precisión: máxima precisión reduce chance de atajada
+    saveChance *= (1 - precisionMultiplier * 0.5);
 
     if (Math.random() < saveChance) {
       return { result: "saved" };
@@ -765,6 +791,7 @@ export class GameScene extends Phaser.Scene {
     this.startKeeperIdle();
     this.instructionText.setText(this.getInstructionText());
     this.aimGraphics.clear();
+    this.precisionBar.hide();
     this.updateHud();
   }
 

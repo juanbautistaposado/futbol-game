@@ -36,7 +36,7 @@ export class RoundSetupScene extends Phaser.Scene {
       .setOrigin(0.5);
 
     this.createSetupCard({
-      x: 332,
+      x: 270,
       y: 314,
       title: "Cantidad de tiros",
       valueColor: "#fde68a",
@@ -49,7 +49,7 @@ export class RoundSetupScene extends Phaser.Scene {
     });
 
     this.createSetupCard({
-      x: 692,
+      x: 754,
       y: 314,
       title: "Cantidad de jugadores",
       valueColor: "#93c5fd",
