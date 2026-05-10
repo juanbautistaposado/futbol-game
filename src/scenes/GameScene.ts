@@ -1,6 +1,6 @@
 import Phaser from "phaser";
-import { getBestScore, saveBestScore } from "../storage";
-import type { KeeperLane, KeeperState, RoundState, ShotInput, ShotResult } from "../types";
+import { getBestScore, getKeeperDifficulty, saveBestScore } from "../storage";
+import type { KeeperDifficulty, KeeperLane, KeeperState, RoundState, ShotInput, ShotResult } from "../types";
 
 const MAX_SHOTS = 7;
 const BALL_START = new Phaser.Math.Vector2(512, 552);
@@ -19,6 +19,46 @@ interface ShotResolution {
   result: ShotResult;
   postImpact?: PostImpact;
 }
+
+interface KeeperDifficultyConfig {
+  reactionMs: number;
+  guessCorrectChance: number;
+  centralSaveChance: number;
+  sideSaveChance: number;
+  highCentralSaveChance: number;
+  highSideSaveChance: number;
+  highCornerSaveChance: number;
+}
+
+const KEEPER_DIFFICULTY_CONFIG: Record<KeeperDifficulty, KeeperDifficultyConfig> = {
+  facil: {
+    reactionMs: 220,
+    guessCorrectChance: 0.42,
+    centralSaveChance: 0.58,
+    sideSaveChance: 0.36,
+    highCentralSaveChance: 0.28,
+    highSideSaveChance: 0.2,
+    highCornerSaveChance: 0.12
+  },
+  medio: {
+    reactionMs: 130,
+    guessCorrectChance: 0.66,
+    centralSaveChance: 0.8,
+    sideSaveChance: 0.6,
+    highCentralSaveChance: 0.48,
+    highSideSaveChance: 0.38,
+    highCornerSaveChance: 0.3
+  },
+  dificil: {
+    reactionMs: 70,
+    guessCorrectChance: 0.82,
+    centralSaveChance: 0.92,
+    sideSaveChance: 0.72,
+    highCentralSaveChance: 0.62,
+    highSideSaveChance: 0.5,
+    highCornerSaveChance: 0.4
+  }
+};
 
 export class GameScene extends Phaser.Scene {
   private ball!: Phaser.GameObjects.Image;
@@ -39,12 +79,16 @@ export class GameScene extends Phaser.Scene {
   private keeperIdleTween?: Phaser.Tweens.Tween;
   private dragStart = new Phaser.Math.Vector2();
   private dragEnd = new Phaser.Math.Vector2();
+  private keeperDifficulty: KeeperDifficulty = "medio";
 
   constructor() {
     super("GameScene");
   }
 
   create(): void {
+    this.keeperDifficulty = getKeeperDifficulty();
+    const keeperConfig = KEEPER_DIFFICULTY_CONFIG[this.keeperDifficulty];
+
     this.round = {
       shotsUsed: 0,
       goals: 0,
@@ -55,7 +99,7 @@ export class GameScene extends Phaser.Scene {
     this.keeperState = {
       lane: "center",
       action: "idle",
-      reactionMs: 130
+      reactionMs: keeperConfig.reactionMs
     };
 
     this.fieldGraphics = this.add.graphics();
@@ -297,6 +341,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private resolveShot(target: Phaser.Math.Vector2): ShotResolution {
+    const keeperConfig = KEEPER_DIFFICULTY_CONFIG[this.keeperDifficulty];
     const postImpact = this.getPostImpact(target);
 
     if (postImpact) {
@@ -326,13 +371,13 @@ export class GameScene extends Phaser.Scene {
     const targetIsHigh = target.y <= 150;
     const saveChance = targetIsHigh
       ? targetIsCentral
-        ? 0.48
+        ? keeperConfig.highCentralSaveChance
         : targetIsCorner
-          ? 0.3
-          : 0.38
+          ? keeperConfig.highCornerSaveChance
+          : keeperConfig.highSideSaveChance
       : targetIsCentral
-        ? 0.8
-        : 0.6;
+        ? keeperConfig.centralSaveChance
+        : keeperConfig.sideSaveChance;
 
     if (Math.random() < saveChance) {
       return { result: "saved" };
@@ -378,7 +423,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private pickKeeperLane(actualLane: KeeperLane): KeeperLane {
-    if (Math.random() < 0.66) {
+    if (Math.random() < KEEPER_DIFFICULTY_CONFIG[this.keeperDifficulty].guessCorrectChance) {
       return actualLane;
     }
 
