@@ -30,7 +30,7 @@ export class ResultScene extends Phaser.Scene {
       .setOrigin(0.5);
 
     this.add
-      .text(512, 324, data.isNewBest ? "Nuevo mejor puntaje" : `Mejor puntaje: ${data.bestScore}/7`, {
+      .text(512, 324, data.isNewBest ? "Nuevo mejor puntaje" : `Mejor puntaje: ${data.bestScore}/${data.shots}`, {
         fontFamily: "Inter, Arial",
         fontSize: "28px",
         color: "#d7f7ff",
@@ -54,9 +54,9 @@ export class ResultScene extends Phaser.Scene {
 
     playAgain.on("pointerover", () => playAgain.setFillStyle(0xfb923c));
     playAgain.on("pointerout", () => playAgain.setFillStyle(0xf97316));
-    playAgain.on("pointerdown", () => this.scene.start("GameScene"));
+    playAgain.on("pointerdown", () => this.scene.start("RoundSetupScene"));
     label.setInteractive({ useHandCursor: true }).on("pointerdown", () => {
-      this.scene.start("GameScene");
+      this.scene.start("RoundSetupScene");
     });
 
     this.add

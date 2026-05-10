@@ -1,13 +1,48 @@
 import Phaser from "phaser";
-import { getBestScore, getKeeperDifficulty, saveBestScore } from "../storage";
-import type { KeeperDifficulty, KeeperLane, KeeperState, RoundState, ShotInput, ShotResult } from "../types";
+import { getBestScore, getKeeperDifficulty, getPlayerAppearance, getSelectedShotCount, saveBestScore } from "../storage";
+import type { KeeperDifficulty, KeeperLane, KeeperState, PlayerAppearance, PlayerHairColor, RoundState, ShotInput, ShotResult } from "../types";
 
-const MAX_SHOTS = 7;
-const BALL_START = new Phaser.Math.Vector2(512, 552);
 const GOAL = new Phaser.Geom.Rectangle(314, 108, 396, 178);
 const GOAL_CENTER = new Phaser.Math.Vector2(512, 198);
 const MAX_DRAG = 250;
 const POST_MARGIN = 20;
+const BALL_SCALE = 0.8;
+const BALL_FLIGHT_END_SCALE = 0.336;
+const BALL_POST_GOAL_SCALE = 0.288;
+const BALL_POST_OUT_SCALE = 0.384;
+const PLAYER_HAIR_COLORS: Record<PlayerHairColor, number> = {
+  rubio: 0xfacc15,
+  morocho: 0x5b3a29,
+  negro: 0x111827
+};
+
+interface FreeKickSetup {
+  ball: Phaser.Math.Vector2;
+  striker: Phaser.Math.Vector2;
+}
+
+const FREE_KICK_SETUPS: FreeKickSetup[] = [
+  {
+    ball: new Phaser.Math.Vector2(512, 552),
+    striker: new Phaser.Math.Vector2(448, 486)
+  },
+  {
+    ball: new Phaser.Math.Vector2(446, 536),
+    striker: new Phaser.Math.Vector2(378, 472)
+  },
+  {
+    ball: new Phaser.Math.Vector2(584, 536),
+    striker: new Phaser.Math.Vector2(520, 472)
+  },
+  {
+    ball: new Phaser.Math.Vector2(404, 574),
+    striker: new Phaser.Math.Vector2(338, 510)
+  },
+  {
+    ball: new Phaser.Math.Vector2(620, 578),
+    striker: new Phaser.Math.Vector2(556, 514)
+  }
+];
 
 interface PostImpact {
   point: Phaser.Math.Vector2;
@@ -80,6 +115,11 @@ export class GameScene extends Phaser.Scene {
   private dragStart = new Phaser.Math.Vector2();
   private dragEnd = new Phaser.Math.Vector2();
   private keeperDifficulty: KeeperDifficulty = "medio";
+  private playerAppearance!: PlayerAppearance;
+  private shotLimit = 7;
+  private currentFreeKickIndex = 0;
+  private ballStartPosition = FREE_KICK_SETUPS[0].ball.clone();
+  private strikerBasePosition = FREE_KICK_SETUPS[0].striker.clone();
 
   constructor() {
     super("GameScene");
@@ -87,12 +127,14 @@ export class GameScene extends Phaser.Scene {
 
   create(): void {
     this.keeperDifficulty = getKeeperDifficulty();
+    this.playerAppearance = getPlayerAppearance();
+    this.shotLimit = Phaser.Math.Clamp(this.scene.settings.data?.shotLimit ?? getSelectedShotCount(), 5, 15);
     const keeperConfig = KEEPER_DIFFICULTY_CONFIG[this.keeperDifficulty];
 
     this.round = {
       shotsUsed: 0,
       goals: 0,
-      bestScore: getBestScore(),
+      bestScore: getBestScore(this.shotLimit),
       phase: "ready"
     };
 
@@ -121,22 +163,32 @@ export class GameScene extends Phaser.Scene {
   private createActors(): void {
     this.keeper = this.add.image(GOAL_CENTER.x, 240, "keeper").setDepth(6).setScale(0.92);
     this.createStriker();
-    this.ball = this.add.image(BALL_START.x, BALL_START.y, "ball").setDepth(10).setScale(1);
+    this.ball = this.add.image(this.ballStartPosition.x, this.ballStartPosition.y, "ball").setDepth(10).setScale(BALL_SCALE);
     this.ball.setInteractive({ useHandCursor: true });
   }
 
   private createStriker(): void {
     const shadow = this.add.ellipse(0, 70, 90, 18, 0x06131a, 0.28);
-    const head = this.add.circle(0, -72, 13, 0xffd38a, 1);
+    const head = this.add.circle(0, -72, 13, PLAYER_HAIR_COLORS[this.playerAppearance.hairColor], 1);
     const neck = this.add.rectangle(0, -55, 12, 12, 0xffd38a, 1);
     this.strikerTorso = this.add
       .rectangle(0, -30, 42, 54, 0xdc2626, 1)
       .setStrokeStyle(3, 0xfee2e2, 1);
 
-    const number = this.add
-      .text(0, -31, "9", {
+    const namePlate = this.add.rectangle(0, -43, 34, 10, 0xb91c1c, 0.95);
+    const playerName = this.add
+      .text(0, -43, this.playerAppearance.name.toUpperCase().slice(0, 10), {
         fontFamily: "Inter, Arial",
-        fontSize: "28px",
+        fontSize: "10px",
+        color: "#f8fafc",
+        fontStyle: "900"
+      })
+      .setOrigin(0.5);
+
+    const number = this.add
+      .text(0, -29, String(this.playerAppearance.jerseyNumber), {
+        fontFamily: "Inter, Arial",
+        fontSize: "26px",
         color: "#ffffff",
         fontStyle: "900"
       })
@@ -147,8 +199,8 @@ export class GameScene extends Phaser.Scene {
     const shorts = this.add.rectangle(0, 4, 44, 18, 0x111827, 1);
     const plantLeg = this.add.rectangle(-13, 12, 13, 58, 0x111827, 1).setOrigin(0.5, 0).setAngle(10);
     this.strikerKickLeg = this.add.rectangle(14, 10, 13, 62, 0x111827, 1).setOrigin(0.5, 0).setAngle(-36);
-    const plantFoot = this.add.ellipse(-4, 69, 28, 11, 0xf8fafc, 1).setAngle(10);
-    this.strikerKickFoot = this.add.ellipse(47, 60, 31, 12, 0xf8fafc, 1).setAngle(-18);
+    const plantFoot = this.add.ellipse(-8, 63, 26, 11, 0x111827, 1).setAngle(-18);
+    this.strikerKickFoot = this.add.ellipse(39, 54, 26, 11, 0x111827, 1).setAngle(-18);
 
     this.striker = this.add.container(448, 486, [
       shadow,
@@ -157,6 +209,8 @@ export class GameScene extends Phaser.Scene {
       neck,
       head,
       this.strikerTorso,
+      namePlate,
+      playerName,
       number,
       shorts,
       plantLeg,
@@ -219,7 +273,7 @@ export class GameScene extends Phaser.Scene {
       }
 
       this.round.phase = "aiming";
-      this.dragStart.set(BALL_START.x, BALL_START.y);
+      this.dragStart.set(this.ballStartPosition.x, this.ballStartPosition.y);
       this.dragEnd.set(pointer.x, pointer.y);
       this.feedbackText.setVisible(false);
     });
@@ -281,8 +335,8 @@ export class GameScene extends Phaser.Scene {
     const resolution = this.resolveShot(target);
     const duration = Phaser.Math.Linear(980, 660, shotInput.power);
     const control = new Phaser.Math.Vector2(
-      (BALL_START.x + target.x) / 2 + shotInput.direction.x * 96,
-      (BALL_START.y + target.y) / 2 - 92 * shotInput.power
+      (this.ballStartPosition.x + target.x) / 2 + shotInput.direction.x * 96,
+      (this.ballStartPosition.y + target.y) / 2 - 92 * shotInput.power
     );
 
     this.playStrikerKick();
@@ -295,8 +349,8 @@ export class GameScene extends Phaser.Scene {
 
     this.tweens.add({
       targets: this.striker,
-      x: 462,
-      y: 482,
+      x: this.strikerBasePosition.x + 14,
+      y: this.strikerBasePosition.y - 4,
       angle: 4,
       duration: 120,
       ease: "Sine.easeOut",
@@ -321,8 +375,8 @@ export class GameScene extends Phaser.Scene {
 
     this.tweens.add({
       targets: this.strikerKickFoot,
-      x: 66,
-      y: 43,
+      x: 60,
+      y: 45,
       angle: -34,
       duration: 130,
       ease: "Back.easeOut",
@@ -516,10 +570,10 @@ export class GameScene extends Phaser.Scene {
       onUpdate: () => {
         const t = flight.t;
         const inverse = 1 - t;
-        const x = inverse * inverse * BALL_START.x + 2 * inverse * t * control.x + t * t * target.x;
-        const y = inverse * inverse * BALL_START.y + 2 * inverse * t * control.y + t * t * target.y;
+        const x = inverse * inverse * this.ballStartPosition.x + 2 * inverse * t * control.x + t * t * target.x;
+        const y = inverse * inverse * this.ballStartPosition.y + 2 * inverse * t * control.y + t * t * target.y;
         this.ball.setPosition(x, y);
-        this.ball.setScale(Phaser.Math.Linear(1, 0.42, t));
+        this.ball.setScale(Phaser.Math.Linear(BALL_SCALE, BALL_FLIGHT_END_SCALE, t));
         this.ball.setAngle(t * 720);
       },
       onComplete: () => this.finishShot(resolution.result)
@@ -548,10 +602,10 @@ export class GameScene extends Phaser.Scene {
       onUpdate: () => {
         const t = flight.t;
         const inverse = 1 - t;
-        const x = inverse * inverse * BALL_START.x + 2 * inverse * t * control.x + t * t * postImpact.point.x;
-        const y = inverse * inverse * BALL_START.y + 2 * inverse * t * control.y + t * t * postImpact.point.y;
+        const x = inverse * inverse * this.ballStartPosition.x + 2 * inverse * t * control.x + t * t * postImpact.point.x;
+        const y = inverse * inverse * this.ballStartPosition.y + 2 * inverse * t * control.y + t * t * postImpact.point.y;
         this.ball.setPosition(x, y);
-        this.ball.setScale(Phaser.Math.Linear(1, 0.42, t));
+        this.ball.setScale(Phaser.Math.Linear(BALL_SCALE, BALL_FLIGHT_END_SCALE, t));
         this.ball.setAngle(t * 760);
       },
       onComplete: () => {
@@ -566,7 +620,7 @@ export class GameScene extends Phaser.Scene {
       targets: this.ball,
       x: postImpact.rebound.x,
       y: postImpact.rebound.y,
-      scale: postImpact.goesIn ? 0.36 : 0.48,
+      scale: postImpact.goesIn ? BALL_POST_GOAL_SCALE : BALL_POST_OUT_SCALE,
       angle: this.ball.angle + (postImpact.goesIn ? 260 : -340),
       duration: 440,
       ease: postImpact.goesIn ? "Sine.easeOut" : "Quad.easeOut",
@@ -608,13 +662,13 @@ export class GameScene extends Phaser.Scene {
     this.showResultFeedback(result);
 
     this.time.delayedCall(1080, () => {
-      if (this.round.shotsUsed >= MAX_SHOTS) {
+      if (this.round.shotsUsed >= this.shotLimit) {
         const previousBest = this.round.bestScore;
-        const bestScore = saveBestScore(this.round.goals);
+        const bestScore = saveBestScore(this.round.goals, this.shotLimit);
 
         this.scene.start("ResultScene", {
           goals: this.round.goals,
-          shots: MAX_SHOTS,
+          shots: this.shotLimit,
           bestScore,
           isNewBest: this.round.goals > previousBest
         });
@@ -629,11 +683,13 @@ export class GameScene extends Phaser.Scene {
     this.round.phase = "ready";
     this.keeperState.action = "idle";
     this.keeperState.lane = "center";
+    this.pickNextFreeKickSetup();
     this.stopKeeperIdle();
     this.tweens.killTweensOf(this.keeper);
+    this.drawField();
     this.ball
-      .setPosition(BALL_START.x, BALL_START.y)
-      .setScale(1)
+      .setPosition(this.ballStartPosition.x, this.ballStartPosition.y)
+      .setScale(BALL_SCALE)
       .setAngle(0)
       .setVisible(true);
     this.resetStrikerPose();
@@ -646,10 +702,29 @@ export class GameScene extends Phaser.Scene {
 
   private resetStrikerPose(): void {
     this.tweens.killTweensOf([this.striker, this.strikerTorso, this.strikerKickLeg, this.strikerKickFoot]);
-    this.striker.setPosition(448, 486).setAngle(0).setScale(1);
+    this.striker.setPosition(this.strikerBasePosition.x, this.strikerBasePosition.y).setAngle(0).setScale(1);
     this.strikerTorso.setAngle(0);
     this.strikerKickLeg.setAngle(-36);
-    this.strikerKickFoot.setPosition(47, 60).setAngle(-18);
+    this.strikerKickFoot.setPosition(39, 54).setAngle(-18);
+  }
+
+  private pickNextFreeKickSetup(): void {
+    if (FREE_KICK_SETUPS.length === 1) {
+      this.currentFreeKickIndex = 0;
+      this.ballStartPosition = FREE_KICK_SETUPS[0].ball.clone();
+      this.strikerBasePosition = FREE_KICK_SETUPS[0].striker.clone();
+      return;
+    }
+
+    let nextIndex = Phaser.Math.Between(0, FREE_KICK_SETUPS.length - 1);
+
+    while (nextIndex === this.currentFreeKickIndex) {
+      nextIndex = Phaser.Math.Between(0, FREE_KICK_SETUPS.length - 1);
+    }
+
+    this.currentFreeKickIndex = nextIndex;
+    this.ballStartPosition = FREE_KICK_SETUPS[nextIndex].ball.clone();
+    this.strikerBasePosition = FREE_KICK_SETUPS[nextIndex].striker.clone();
   }
 
   private startKeeperIdle(): void {
@@ -725,8 +800,10 @@ export class GameScene extends Phaser.Scene {
   }
 
   private updateHud(): void {
-    this.hudText.setText(`Goles ${this.round.goals}/${MAX_SHOTS}   Tiro ${Math.min(this.round.shotsUsed + 1, MAX_SHOTS)}/${MAX_SHOTS}`);
-    this.bestText.setText(`Mejor ${this.round.bestScore}/7`);
+    this.hudText.setText(
+      `Goles ${this.round.goals}/${this.shotLimit}   Tiro ${Math.min(this.round.shotsUsed + 1, this.shotLimit)}/${this.shotLimit}`
+    );
+    this.bestText.setText(`Mejor ${this.round.bestScore}/${this.shotLimit}`);
   }
 
   private drawAim(): void {
@@ -742,11 +819,11 @@ export class GameScene extends Phaser.Scene {
 
     this.aimGraphics.clear();
     this.aimGraphics.lineStyle(5, color, 0.78);
-    this.aimGraphics.lineBetween(BALL_START.x, BALL_START.y, target.x, target.y);
+    this.aimGraphics.lineBetween(this.ballStartPosition.x, this.ballStartPosition.y, target.x, target.y);
     this.aimGraphics.fillStyle(color, 0.95);
     this.aimGraphics.fillCircle(target.x, target.y, 10 + shotInput.power * 8);
     this.aimGraphics.lineStyle(3, 0xffffff, 0.3);
-    this.aimGraphics.strokeCircle(BALL_START.x, BALL_START.y, MAX_DRAG);
+    this.aimGraphics.strokeCircle(this.ballStartPosition.x, this.ballStartPosition.y, MAX_DRAG);
   }
 
   private drawField(): void {
@@ -790,7 +867,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     graphics.fillStyle(0xffffff, 0.2);
-    graphics.fillEllipse(BALL_START.x, BALL_START.y + 24, 76, 18);
+    graphics.fillEllipse(this.ballStartPosition.x, this.ballStartPosition.y + 24, 61, 14);
   }
 
   private drawPenaltyArea(graphics: Phaser.GameObjects.Graphics): void {

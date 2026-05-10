@@ -3,6 +3,13 @@ export type ShotResult = "goal" | "saved" | "missed" | "post-goal" | "post-out";
 export type ShotPhase = "ready" | "aiming" | "flying" | "resolved";
 
 export type KeeperDifficulty = "facil" | "medio" | "dificil";
+export type PlayerHairColor = "rubio" | "morocho" | "negro";
+
+export interface PlayerAppearance {
+  name: string;
+  jerseyNumber: number;
+  hairColor: PlayerHairColor;
+}
 
 export interface ShotInput {
   start: Phaser.Math.Vector2;
