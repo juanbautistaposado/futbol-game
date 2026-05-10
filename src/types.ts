@@ -11,6 +11,11 @@ export interface PlayerAppearance {
   hairColor: PlayerHairColor;
 }
 
+export interface RoundSetupData {
+  shotLimit: number;
+  playerCount: number;
+}
+
 export interface ShotInput {
   start: Phaser.Math.Vector2;
   end: Phaser.Math.Vector2;
@@ -34,9 +39,16 @@ export interface KeeperState {
   reactionMs: number;
 }
 
+export interface RoundResultPlayer {
+  name: string;
+  goals: number;
+  shots: number;
+}
+
 export interface RoundResultData {
   goals: number;
   shots: number;
   bestScore: number;
   isNewBest: boolean;
+  players?: RoundResultPlayer[];
 }

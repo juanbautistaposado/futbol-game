@@ -1,10 +1,13 @@
 import Phaser from "phaser";
-import { getBestScore, getSelectedShotCount, saveSelectedShotCount } from "../storage";
+import { getBestScore, getSelectedPlayerCount, getSelectedShotCount, saveSelectedPlayerCount, saveSelectedShotCount } from "../storage";
+import type { RoundSetupData } from "../types";
 
 export class RoundSetupScene extends Phaser.Scene {
   private shotCount = 7;
+  private playerCount = 1;
   private shotCountText!: Phaser.GameObjects.Text;
-  private bestScoreText!: Phaser.GameObjects.Text;
+  private playerCountText!: Phaser.GameObjects.Text;
+  private summaryText!: Phaser.GameObjects.Text;
 
   constructor() {
     super("RoundSetupScene");
@@ -12,10 +15,11 @@ export class RoundSetupScene extends Phaser.Scene {
 
   create(): void {
     this.shotCount = getSelectedShotCount();
+    this.playerCount = getSelectedPlayerCount();
     this.drawBackdrop();
 
     this.add
-      .text(512, 116, "ELEGIR TIROS", {
+      .text(512, 108, "CONFIGURAR RONDA", {
         fontFamily: "Inter, Arial",
         fontSize: "54px",
         color: "#f8fafc",
@@ -24,53 +28,56 @@ export class RoundSetupScene extends Phaser.Scene {
       .setOrigin(0.5);
 
     this.add
-      .text(512, 184, "Antes de jugar, elige cuantas chances quieres en la ronda.", {
+      .text(512, 170, "Elige cuantas chances tendra cada jugador antes de empezar.", {
         fontFamily: "Inter, Arial",
         fontSize: "22px",
         color: "#d7f7ff"
       })
       .setOrigin(0.5);
 
-    this.add
-      .rectangle(512, 324, 420, 160, 0x0e2230, 0.9)
-      .setStrokeStyle(2, 0x8ecae6, 0.6);
+    this.createSetupCard({
+      x: 332,
+      y: 314,
+      title: "Cantidad de tiros",
+      valueColor: "#fde68a",
+      helper: "Cada persona pateara esa cantidad de veces.",
+      onDecrease: () => this.changeShotCount(-1),
+      onIncrease: () => this.changeShotCount(1),
+      onValueCreated: (text) => {
+        this.shotCountText = text;
+      }
+    });
 
-    this.add
-      .text(512, 270, "Cantidad de tiros", {
-        fontFamily: "Inter, Arial",
-        fontSize: "26px",
-        color: "#f8fafc",
-        fontStyle: "800"
-      })
-      .setOrigin(0.5);
+    this.createSetupCard({
+      x: 692,
+      y: 314,
+      title: "Cantidad de jugadores",
+      valueColor: "#93c5fd",
+      helper: "Se van turnando: un tiro cada uno por vuelta.",
+      onDecrease: () => this.changePlayerCount(-1),
+      onIncrease: () => this.changePlayerCount(1),
+      onValueCreated: (text) => {
+        this.playerCountText = text;
+      }
+    });
 
-    this.createStepperButton(390, 324, "-", () => this.changeShotCount(-1));
-    this.shotCountText = this.add
-      .text(512, 316, String(this.shotCount), {
-        fontFamily: "Inter, Arial",
-        fontSize: "60px",
-        color: "#fde68a",
-        fontStyle: "900"
-      })
-      .setOrigin(0.5);
-    this.createStepperButton(634, 324, "+", () => this.changeShotCount(1));
-
-    this.bestScoreText = this.add
-      .text(512, 372, "", {
+    this.summaryText = this.add
+      .text(512, 428, "", {
         fontFamily: "Inter, Arial",
         fontSize: "20px",
         color: "#d7f7ff",
-        fontStyle: "700"
+        fontStyle: "700",
+        align: "center"
       })
       .setOrigin(0.5);
 
     const playButton = this.add
-      .rectangle(512, 478, 280, 66, 0xf97316)
+      .rectangle(512, 500, 280, 66, 0xf97316)
       .setStrokeStyle(3, 0xffedd5)
       .setInteractive({ useHandCursor: true });
 
     const playLabel = this.add
-      .text(512, 478, "EMPEZAR", {
+      .text(512, 500, "EMPEZAR", {
         fontFamily: "Inter, Arial",
         fontSize: "30px",
         color: "#111827",
@@ -79,8 +86,12 @@ export class RoundSetupScene extends Phaser.Scene {
       .setOrigin(0.5);
 
     const startRound = () => {
-      saveSelectedShotCount(this.shotCount);
-      this.scene.start("GameScene", { shotLimit: this.shotCount });
+      const data: RoundSetupData = {
+        shotLimit: saveSelectedShotCount(this.shotCount),
+        playerCount: saveSelectedPlayerCount(this.playerCount)
+      };
+
+      this.scene.start("GameScene", data);
     };
 
     playButton.on("pointerover", () => playButton.setFillStyle(0xfb923c));
@@ -89,12 +100,12 @@ export class RoundSetupScene extends Phaser.Scene {
     playLabel.setInteractive({ useHandCursor: true }).on("pointerdown", startRound);
 
     const backButton = this.add
-      .rectangle(512, 554, 220, 54, 0x163142)
+      .rectangle(512, 576, 220, 54, 0x163142)
       .setStrokeStyle(2, 0x8ecae6)
       .setInteractive({ useHandCursor: true });
 
     const backLabel = this.add
-      .text(512, 554, "VOLVER", {
+      .text(512, 576, "VOLVER", {
         fontFamily: "Inter, Arial",
         fontSize: "24px",
         color: "#d7f7ff",
@@ -110,17 +121,75 @@ export class RoundSetupScene extends Phaser.Scene {
     });
 
     this.input.keyboard?.once("keydown-ESC", () => this.scene.start("MenuScene"));
-    this.refreshShotCount();
+    this.refreshSummary();
+  }
+
+  private createSetupCard(config: {
+    x: number;
+    y: number;
+    title: string;
+    valueColor: string;
+    helper: string;
+    onDecrease: () => void;
+    onIncrease: () => void;
+    onValueCreated: (text: Phaser.GameObjects.Text) => void;
+  }): void {
+    this.add
+      .rectangle(config.x, config.y, 320, 164, 0x0e2230, 0.9)
+      .setStrokeStyle(2, 0x8ecae6, 0.6);
+
+    this.add
+      .text(config.x, config.y - 56, config.title, {
+        fontFamily: "Inter, Arial",
+        fontSize: "26px",
+        color: "#f8fafc",
+        fontStyle: "800"
+      })
+      .setOrigin(0.5);
+
+    this.createStepperButton(config.x - 112, config.y, "-", config.onDecrease);
+    const valueText = this.add
+      .text(config.x, config.y - 8, "", {
+        fontFamily: "Inter, Arial",
+        fontSize: "60px",
+        color: config.valueColor,
+        fontStyle: "900"
+      })
+      .setOrigin(0.5);
+    this.createStepperButton(config.x + 112, config.y, "+", config.onIncrease);
+    config.onValueCreated(valueText);
+
+    this.add
+      .text(config.x, config.y + 50, config.helper, {
+        fontFamily: "Inter, Arial",
+        fontSize: "18px",
+        color: "#b7d4df"
+      })
+      .setOrigin(0.5);
   }
 
   private changeShotCount(delta: number): void {
     this.shotCount = Phaser.Math.Clamp(this.shotCount + delta, 5, 15);
-    this.refreshShotCount();
+    this.refreshSummary();
   }
 
-  private refreshShotCount(): void {
+  private changePlayerCount(delta: number): void {
+    this.playerCount = Phaser.Math.Clamp(this.playerCount + delta, 1, 4);
+    this.refreshSummary();
+  }
+
+  private refreshSummary(): void {
     this.shotCountText.setText(String(this.shotCount));
-    this.bestScoreText.setText(`Mejor marca para ${this.shotCount} tiros: ${getBestScore(this.shotCount)}/${this.shotCount}`);
+    this.playerCountText.setText(String(this.playerCount));
+
+    const bestScore = getBestScore(this.shotCount);
+    const totalShots = this.shotCount * this.playerCount;
+    const summary =
+      this.playerCount === 1
+        ? `Mejor marca individual: ${bestScore}/${this.shotCount}\nTotal de remates en la ronda: ${totalShots}`
+        : `Cada jugador pateara ${this.shotCount} veces.\nTotal de remates entre todos: ${totalShots}`;
+
+    this.summaryText.setText(summary);
   }
 
   private createStepperButton(x: number, y: number, label: string, onPress: () => void): void {

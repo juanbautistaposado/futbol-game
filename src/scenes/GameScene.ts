@@ -1,6 +1,6 @@
 import Phaser from "phaser";
-import { getBestScore, getKeeperDifficulty, getPlayerAppearance, getSelectedShotCount, saveBestScore } from "../storage";
-import type { KeeperDifficulty, KeeperLane, KeeperState, PlayerAppearance, PlayerHairColor, RoundState, ShotInput, ShotResult } from "../types";
+import { getBestScore, getKeeperDifficulty, getPlayerAppearance, getSelectedPlayerCount, getSelectedShotCount, saveBestScore } from "../storage";
+import type { KeeperDifficulty, KeeperLane, KeeperState, PlayerAppearance, PlayerHairColor, RoundResultPlayer, RoundSetupData, RoundState, ShotInput, ShotResult } from "../types";
 
 const GOAL = new Phaser.Geom.Rectangle(314, 108, 396, 178);
 const GOAL_CENTER = new Phaser.Math.Vector2(512, 198);
@@ -19,6 +19,13 @@ const PLAYER_HAIR_COLORS: Record<PlayerHairColor, number> = {
 interface FreeKickSetup {
   ball: Phaser.Math.Vector2;
   striker: Phaser.Math.Vector2;
+}
+
+interface Competitor {
+  name: string;
+  goals: number;
+  shotsTaken: number;
+  jerseyNumber: number;
 }
 
 const FREE_KICK_SETUPS: FreeKickSetup[] = [
@@ -102,6 +109,8 @@ export class GameScene extends Phaser.Scene {
   private strikerTorso!: Phaser.GameObjects.Rectangle;
   private strikerKickLeg!: Phaser.GameObjects.Rectangle;
   private strikerKickFoot!: Phaser.GameObjects.Ellipse;
+  private strikerNameText!: Phaser.GameObjects.Text;
+  private strikerNumberText!: Phaser.GameObjects.Text;
   private fieldGraphics!: Phaser.GameObjects.Graphics;
   private aimGraphics!: Phaser.GameObjects.Graphics;
   private goalFlash!: Phaser.GameObjects.Graphics;
@@ -117,6 +126,8 @@ export class GameScene extends Phaser.Scene {
   private keeperDifficulty: KeeperDifficulty = "medio";
   private playerAppearance!: PlayerAppearance;
   private shotLimit = 7;
+  private playerCount = 1;
+  private competitors: Competitor[] = [];
   private currentFreeKickIndex = 0;
   private ballStartPosition = FREE_KICK_SETUPS[0].ball.clone();
   private strikerBasePosition = FREE_KICK_SETUPS[0].striker.clone();
@@ -128,8 +139,10 @@ export class GameScene extends Phaser.Scene {
   create(): void {
     this.keeperDifficulty = getKeeperDifficulty();
     this.playerAppearance = getPlayerAppearance();
-    const sceneData = this.scene.settings.data as { shotLimit?: number } | undefined;
+    const sceneData = this.scene.settings.data as Partial<RoundSetupData> | undefined;
     this.shotLimit = Phaser.Math.Clamp(sceneData?.shotLimit ?? getSelectedShotCount(), 5, 15);
+    this.playerCount = Phaser.Math.Clamp(sceneData?.playerCount ?? getSelectedPlayerCount(), 1, 4);
+    this.competitors = this.buildCompetitors();
     const keeperConfig = KEEPER_DIFFICULTY_CONFIG[this.keeperDifficulty];
 
     this.round = {
@@ -177,7 +190,7 @@ export class GameScene extends Phaser.Scene {
       .setStrokeStyle(3, 0xfee2e2, 1);
 
     const namePlate = this.add.rectangle(0, -43, 34, 10, 0xb91c1c, 0.95);
-    const playerName = this.add
+    this.strikerNameText = this.add
       .text(0, -43, this.playerAppearance.name.toUpperCase().slice(0, 10), {
         fontFamily: "Inter, Arial",
         fontSize: "10px",
@@ -186,7 +199,7 @@ export class GameScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
 
-    const number = this.add
+    this.strikerNumberText = this.add
       .text(0, -29, String(this.playerAppearance.jerseyNumber), {
         fontFamily: "Inter, Arial",
         fontSize: "26px",
@@ -211,8 +224,8 @@ export class GameScene extends Phaser.Scene {
       head,
       this.strikerTorso,
       namePlate,
-      playerName,
-      number,
+      this.strikerNameText,
+      this.strikerNumberText,
       shorts,
       plantLeg,
       this.strikerKickLeg,
@@ -265,6 +278,38 @@ export class GameScene extends Phaser.Scene {
       .setDepth(20);
 
     this.updateHud();
+  }
+
+  private buildCompetitors(): Competitor[] {
+    return Array.from({ length: this.playerCount }, (_, index) => ({
+      name: index === 0 ? this.playerAppearance.name : `Jugador ${index + 1}`,
+      goals: 0,
+      shotsTaken: 0,
+      jerseyNumber: this.getJerseyNumberForPlayer(index)
+    }));
+  }
+
+  private getJerseyNumberForPlayer(index: number): number {
+    const jerseyNumber = this.playerAppearance.jerseyNumber + index;
+    return jerseyNumber <= 99 ? jerseyNumber : ((jerseyNumber - 1) % 99) + 1;
+  }
+
+  private getCurrentPlayer(): Competitor {
+    return this.competitors[this.round.shotsUsed % this.playerCount] ?? this.competitors[0];
+  }
+
+  private getCurrentRoundNumber(): number {
+    return Math.floor(this.round.shotsUsed / this.playerCount) + 1;
+  }
+
+  private getTotalShots(): number {
+    return this.shotLimit * this.playerCount;
+  }
+
+  private applyCurrentPlayerIdentity(): void {
+    const currentPlayer = this.getCurrentPlayer();
+    this.strikerNameText.setText(currentPlayer.name.toUpperCase().slice(0, 10));
+    this.strikerNumberText.setText(String(currentPlayer.jerseyNumber));
   }
 
   private registerInput(): void {
@@ -651,19 +696,40 @@ export class GameScene extends Phaser.Scene {
   }
 
   private finishShot(result: ShotResult): void {
+    const currentPlayer = this.getCurrentPlayer();
     this.round.shotsUsed += 1;
     this.round.lastResult = result;
     this.keeperState.action = "recovering";
+    currentPlayer.shotsTaken += 1;
 
     if (result === "goal" || result === "post-goal") {
       this.round.goals += 1;
+      currentPlayer.goals += 1;
     }
 
     this.updateHud();
     this.showResultFeedback(result);
 
     this.time.delayedCall(1080, () => {
-      if (this.round.shotsUsed >= this.shotLimit) {
+      if (this.round.shotsUsed >= this.getTotalShots()) {
+        if (this.playerCount > 1) {
+          const players = this.competitors.map<RoundResultPlayer>((player) => ({
+            name: player.name,
+            goals: player.goals,
+            shots: player.shotsTaken
+          }));
+          const winningGoals = Math.max(...players.map((player) => player.goals), 0);
+
+          this.scene.start("ResultScene", {
+            goals: winningGoals,
+            shots: this.shotLimit,
+            bestScore: winningGoals,
+            isNewBest: false,
+            players
+          });
+          return;
+        }
+
         const previousBest = this.round.bestScore;
         const bestScore = saveBestScore(this.round.goals, this.shotLimit);
 
@@ -693,10 +759,11 @@ export class GameScene extends Phaser.Scene {
       .setScale(BALL_SCALE)
       .setAngle(0)
       .setVisible(true);
+    this.applyCurrentPlayerIdentity();
     this.resetStrikerPose();
     this.keeper.setTexture("keeper").setPosition(GOAL_CENTER.x, 240).setAngle(0).setScale(0.92);
     this.startKeeperIdle();
-    this.instructionText.setText("Arrastra desde la pelota hacia el arco y suelta para patear");
+    this.instructionText.setText(this.getInstructionText());
     this.aimGraphics.clear();
     this.updateHud();
   }
@@ -801,10 +868,40 @@ export class GameScene extends Phaser.Scene {
   }
 
   private updateHud(): void {
-    this.hudText.setText(
-      `Goles ${this.round.goals}/${this.shotLimit}   Tiro ${Math.min(this.round.shotsUsed + 1, this.shotLimit)}/${this.shotLimit}`
-    );
-    this.bestText.setText(`Mejor ${this.round.bestScore}/${this.shotLimit}`);
+    if (this.playerCount === 1) {
+      this.hudText.setText(
+        `Goles ${this.round.goals}/${this.shotLimit}   Tiro ${Math.min(this.round.shotsUsed + 1, this.shotLimit)}/${this.shotLimit}`
+      );
+      this.bestText.setText(`Mejor ${this.round.bestScore}/${this.shotLimit}`);
+      return;
+    }
+
+    const roundIsFinished = this.round.shotsUsed >= this.getTotalShots();
+    if (roundIsFinished) {
+      this.hudText.setText(`Ronda completa   ${this.shotLimit}/${this.shotLimit}`);
+      this.bestText.setText(this.getMultiplayerScoreboardText());
+      return;
+    }
+
+    const currentPlayer = this.getCurrentPlayer();
+    const roundNumber = this.getCurrentRoundNumber();
+
+    this.hudText.setText(`Turno ${currentPlayer.name.toUpperCase().slice(0, 14)}   Ronda ${roundNumber}/${this.shotLimit}`);
+    this.bestText.setText(this.getMultiplayerScoreboardText());
+  }
+
+  private getInstructionText(): string {
+    if (this.playerCount === 1) {
+      return "Arrastra desde la pelota hacia el arco y suelta para patear";
+    }
+
+    return `Turno de ${this.getCurrentPlayer().name}. Arrastra desde la pelota y patea.`;
+  }
+
+  private getMultiplayerScoreboardText(): string {
+    return this.competitors
+      .map((player, index) => `${index === 0 ? player.name.toUpperCase().slice(0, 6) : `J${index + 1}`} ${player.goals}`)
+      .join("   ");
   }
 
   private drawAim(): void {

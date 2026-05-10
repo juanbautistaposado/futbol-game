@@ -6,6 +6,7 @@ const PLAYER_NAME_KEY = "free-kick-mvp-player-name";
 const PLAYER_NUMBER_KEY = "free-kick-mvp-player-number";
 const PLAYER_HAIR_COLOR_KEY = "free-kick-mvp-player-hair-color";
 const SHOT_COUNT_KEY = "free-kick-mvp-shot-count";
+const PLAYER_COUNT_KEY = "free-kick-mvp-player-count";
 
 export function getBestScore(shotCount: number = getSelectedShotCount()): number {
   const bestScores = getBestScoreMap();
@@ -81,6 +82,20 @@ export function saveSelectedShotCount(shotCount: number): number {
   return normalized;
 }
 
+export function getSelectedPlayerCount(): number {
+  const value = window.localStorage.getItem(PLAYER_COUNT_KEY);
+  const playerCount = value === null ? 1 : Number.parseInt(value, 10);
+
+  return normalizePlayerCount(playerCount);
+}
+
+export function saveSelectedPlayerCount(playerCount: number): number {
+  const normalized = normalizePlayerCount(playerCount);
+  window.localStorage.setItem(PLAYER_COUNT_KEY, String(normalized));
+
+  return normalized;
+}
+
 function sanitizePlayerName(name: string): string {
   const cleaned = name.trim().replace(/\s+/g, " ");
 
@@ -118,4 +133,8 @@ function getBestScoreMap(): Record<string, number> {
 
 function normalizeShotCount(shotCount: number): number {
   return Phaser.Math.Clamp(Number.isFinite(shotCount) ? shotCount : 7, 5, 15);
+}
+
+function normalizePlayerCount(playerCount: number): number {
+  return Phaser.Math.Clamp(Number.isFinite(playerCount) ? playerCount : 1, 1, 4);
 }
