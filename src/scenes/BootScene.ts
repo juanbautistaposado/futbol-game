@@ -17,6 +17,10 @@ export class BootScene extends Phaser.Scene {
     }
 
     const texture = this.textures.createCanvas("ball", 64, 64);
+    if (!texture) {
+      throw new Error("No se pudo crear la textura de la pelota.");
+    }
+
     const ctx = texture.context;
     const centerX = 32;
     const centerY = 32;

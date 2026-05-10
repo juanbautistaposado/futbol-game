@@ -128,7 +128,8 @@ export class GameScene extends Phaser.Scene {
   create(): void {
     this.keeperDifficulty = getKeeperDifficulty();
     this.playerAppearance = getPlayerAppearance();
-    this.shotLimit = Phaser.Math.Clamp(this.scene.settings.data?.shotLimit ?? getSelectedShotCount(), 5, 15);
+    const sceneData = this.scene.settings.data as { shotLimit?: number } | undefined;
+    this.shotLimit = Phaser.Math.Clamp(sceneData?.shotLimit ?? getSelectedShotCount(), 5, 15);
     const keeperConfig = KEEPER_DIFFICULTY_CONFIG[this.keeperDifficulty];
 
     this.round = {
