@@ -4,3 +4,5 @@ dist/
 .DS_Store
 .playwright-cli/
 output/
+.godot/
+apps/free-kick-3d/build/

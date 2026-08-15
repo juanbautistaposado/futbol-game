@@ -17,6 +17,9 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/mvp-phaser
 
     steps:
       - name: Checkout
@@ -27,6 +30,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
+          cache-dependency-path: apps/mvp-phaser/package-lock.json
 
       - name: Install dependencies
         run: npm ci
@@ -40,7 +44,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: dist
+          path: apps/mvp-phaser/dist
 
   deploy:
     environment:
