@@ -9,6 +9,7 @@ func run() -> void:
 	var menu = current_scene
 	assert(menu.name == "MainMenu")
 	assert(menu.play_button.has_focus())
+	menu.show_settings()
 	assert(menu.difficulty_buttons.size() == 3)
 	menu.show_appearance()
 	await process_frame
@@ -29,9 +30,24 @@ func run() -> void:
 	var escape := InputEventKey.new()
 	escape.keycode = KEY_ESCAPE
 	escape.pressed = true
-	current_scene._unhandled_input(escape)
+	current_scene.match_overlay._unhandled_input(escape)
+	assert(paused)
+	assert(current_scene.match_overlay.pause_panel.visible)
+	current_scene.match_overlay.set_paused(false)
+	assert(not paused)
+	current_scene.shot_goal = -1
+	current_scene.resolve_shot(true,"¡Gol!")
+	assert(current_scene.match_overlay.result_label.text == "¡GOL!")
+	current_scene.match_overlay.set_paused(true)
+	await create_timer(1.5).timeout
+	assert(current_scene.phase == current_scene.Phase.RESOLVING)
+	current_scene.match_overlay.set_paused(false)
+	await create_timer(1.4).timeout
+	assert(current_scene.phase != current_scene.Phase.RESOLVING)
+	current_scene.match_overlay.set_paused(true)
+	current_scene.match_overlay.pause_panel.get_child(1).get_child(2).pressed.emit()
 	await scene_changed
 	assert(current_scene.name == "MainMenu")
 	assert(current_scene.play_button.has_focus())
-	print("PASS: menú, aspecto, jugar y volver con Escape")
+	print("PASS: menú, aspecto, jugar, resultado central, pausa real, continuar y salir")
 	quit()

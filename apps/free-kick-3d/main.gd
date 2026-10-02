@@ -5,15 +5,17 @@ var player_count := 1
 var active_player := 0
 var local_scores: Array[int] = []
 @export var save_path := "user://free_kick_3d.cfg"
-const GOAL_Z := 12.0
-const GOAL_WIDTH := 7.2
-const GOAL_HEIGHT := 2.5
+const GOAL_Z := 52.5
+const GOAL_WIDTH := 8.4
+const GOAL_HEIGHT := 2.9
 const BALL_RADIUS := 0.22
+const AI_SHOT_FLIGHT_TIME := 1.22
 const ShotMeter = preload("res://shot_meter.gd")
 const Keeper = preload("res://keeper.gd")
+const GraphicsQuality = preload("res://graphics_quality.gd")
 
 
-enum Phase { ATTACK, DEFEND, RESOLVING, FINISHED }
+enum Phase { ATTACK, DEFEND, RESOLVING, FINISHED, KICKING }
 
 var phase: Phase = Phase.ATTACK
 var turn := 1
@@ -24,6 +26,15 @@ var best_score := 0
 var difficulty := "medio"
 var player_name := "Jugador"
 
+var kicker: Node3D
+var hit_woodwork := false
+var previous_ball_position := Vector3.ZERO
+var keeper_rng := RandomNumberGenerator.new()
+
+var ball_effect: Tween
+var holding_keeper: Keeper
+var last_flight_velocity := Vector3.ZERO
+
 var ball: RigidBody3D
 var away_keeper: Keeper
 var home_keeper: Keeper
@@ -33,6 +44,11 @@ var score_label: Label
 var hint_label: Label
 var aim_label: Label
 var aim_marker: MeshInstance3D
+var match_overlay: CanvasLayer
+var match_audio: Node
+var defense_target: Control
+var defense_aim := Vector2(0.0, 1.45)
+var touch_aiming := false
 var shot_meter: ShotMeter
 var last_accuracy := 1.0
 
@@ -62,42 +78,59 @@ func _ready() -> void:
 	home_keeper = create_keeper(1, Color("22c55e"))
 	apply_player_appearance()
 	ball = create_ball()
+	kicker = preload("res://kicker.gd").new()
+	add_child(kicker)
+	kicker.scale = Vector3.ONE * 1.15
+	keeper_rng.randomize()
 	aim_marker = create_aim_marker()
 	create_interface()
+	match_audio = preload("res://match_audio.gd").new()
+	add_child(match_audio)
+	var settings_profile := ConfigFile.new()
+	settings_profile.load(save_path)
+	preload("res://match_audio.gd").set_global_volume(float(settings_profile.get_value("settings", "sound_volume", 0.8)))
 	start_attack()
+	GraphicsQuality.apply(self, str(settings_profile.get_value("settings", "graphics_quality", "alto")))
 
 func _process(delta: float) -> void:
+	if is_instance_valid(holding_keeper):
+		ball.global_position = holding_keeper.held_ball_position(shot_goal)
 	if phase == Phase.ATTACK and is_charging:
 		shot_meter.advance(delta)
 		shot_power = shot_meter.power
 		refresh_aim_marker()
 	if ball_in_flight:
 		shot_time += delta
-		if shot_time > 4.0 or abs(ball.position.z) > 18.0 or ball.position.y < -1.0:
-			resolve_shot(false, "Fuera o atajada")
+		if shot_time > 4.0 or abs(ball.position.z) > GOAL_Z + 7.0 or ball.position.y < -1.0:
+			resolve_shot(false, "¡Palo y afuera!" if hit_woodwork else "¡Afuera!")
 	if phase == Phase.DEFEND and not ball_in_flight:
 		defense_countdown -= delta
 		if defense_countdown <= 0.0:
 			fire_ai_shot()
 	update_aim_label()
+	if phase == Phase.DEFEND and defense_target.visible:
+		refresh_defense_target()
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("ui_cancel"):
-		get_viewport().set_input_as_handled()
-		get_tree().change_scene_to_file("res://Menu.tscn")
-		return
-	if phase == Phase.RESOLVING:
+	if phase == Phase.RESOLVING or phase == Phase.KICKING:
 		return
 	if phase == Phase.FINISHED:
 		if event is InputEventKey and event.pressed and event.keycode == KEY_SPACE:
 			get_tree().change_scene_to_file("res://Menu.tscn")
 		return
 
-	if event is InputEventMouseMotion and phase == Phase.ATTACK and not ball_in_flight:
-		set_attack_target_from_screen(event.position)
+	if event is InputEventMouseMotion:
+		if event.device == InputEvent.DEVICE_ID_EMULATION:
+			return
+		if phase == Phase.ATTACK and not ball_in_flight:
+			set_attack_target_from_screen(event.position)
+		elif phase == Phase.DEFEND and not keeper_dived:
+			preview_defense_target(event.position)
 		return
 
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		if event.device == InputEvent.DEVICE_ID_EMULATION:
+			return
 		if phase == Phase.ATTACK and not ball_in_flight:
 			if event.pressed:
 				set_attack_target_from_screen(event.position)
@@ -108,7 +141,7 @@ func _unhandled_input(event: InputEvent) -> void:
 				is_charging = false
 				fire_player_shot()
 		elif phase == Phase.DEFEND and event.pressed:
-			dive_home_keeper(lane_from_screen_x(event.position.x))
+			dive_home_keeper_from_screen(event.position)
 		return
 
 	if event is InputEventScreenTouch:
@@ -121,12 +154,20 @@ func _unhandled_input(event: InputEvent) -> void:
 			elif is_charging:
 				is_charging = false
 				fire_player_shot()
-		elif phase == Phase.DEFEND and event.pressed:
-			dive_home_keeper(lane_from_screen_x(event.position.x))
+		elif phase == Phase.DEFEND:
+			if event.pressed and not keeper_dived:
+				touch_aiming = true
+				preview_defense_target(event.position)
+			elif not event.pressed and touch_aiming:
+				touch_aiming = false
+				dive_home_keeper_from_screen(event.position)
 		return
 
-	if event is InputEventScreenDrag and phase == Phase.ATTACK and is_charging:
-		set_attack_target_from_screen(event.position)
+	if event is InputEventScreenDrag:
+		if phase == Phase.ATTACK and is_charging:
+			set_attack_target_from_screen(event.position)
+		elif phase == Phase.DEFEND and touch_aiming and not keeper_dived:
+			preview_defense_target(event.position)
 		return
 
 	if event is InputEventKey and not event.echo and phase == Phase.ATTACK and not ball_in_flight:
@@ -141,8 +182,12 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo and phase == Phase.DEFEND:
 		if event.keycode == KEY_W or event.keycode == KEY_UP:
 			keeper_height = 1
+			defense_aim.y = 2.65
 		elif event.keycode == KEY_S:
 			keeper_height = -1
+			defense_aim.y = 0.3
+		if event.keycode == KEY_W or event.keycode == KEY_UP or event.keycode == KEY_S:
+			defense_target.set_target(defense_screen_from_target(defense_aim))
 		if event.keycode == KEY_LEFT:
 			dive_home_keeper(-1)
 		elif event.keycode == KEY_RIGHT:
@@ -153,49 +198,107 @@ func _unhandled_input(event: InputEvent) -> void:
 func create_world() -> void:
 	var environment := WorldEnvironment.new()
 	var settings := Environment.new()
-	settings.background_mode = Environment.BG_COLOR
-	settings.background_color = Color("0b1f2a")
+	settings.background_mode = Environment.BG_SKY
+	var sky := Sky.new()
+	var sky_material := ProceduralSkyMaterial.new()
+	sky_material.sky_top_color = Color("203d5c")
+	sky_material.sky_horizon_color = Color("a6bac8")
+	sky_material.ground_horizon_color = Color("98abae")
+	sky_material.ground_bottom_color = Color("33444a")
+	sky.sky_material = sky_material
+	settings.sky = sky
 	settings.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	settings.ambient_light_color = Color("b9d9ff")
-	settings.ambient_light_energy = 0.55
+	settings.ambient_light_color = Color("c5d2d8")
+	settings.ambient_light_energy = 0.51
 	settings.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	environment.environment = settings
 	add_child(environment)
 
 	var sun := DirectionalLight3D.new()
-	sun.rotation_degrees = Vector3(-55.0, -25.0, 0.0)
-	sun.light_energy = 1.25
+	sun.rotation_degrees = Vector3(-40.0, -35.0, 0.0)
+	sun.light_color = Color("fff0d9")
+	sun.light_energy = 0.96
+	sun.directional_shadow_max_distance = 145.0
 	sun.shadow_enabled = true
 	add_child(sun)
 
 	camera = Camera3D.new()
 	camera.current = true
+	camera.fov = 55.0
 	add_child(camera)
 
 func create_pitch() -> void:
-	create_static_box("pitch", Vector3(0, -0.15, 0), Vector3(28, 0.3, 34), Color("16753c"))
-	create_static_box("center_line", Vector3(0, 0.01, 0), Vector3(0.12, 0.02, 32), Color("d9f99d"))
-	for x in [-10.0, 10.0]:
-		create_static_box("stadium_wall", Vector3(x, 1.0, 0), Vector3(0.3, 2.0, 34), Color("123047"))
+	var pitch := create_static_box("pitch", Vector3(0, -0.15, 0), Vector3(76, 0.3, 115), Color.WHITE)
+	var grass := ShaderMaterial.new()
+	grass.shader = preload("res://shaders/turf.gdshader")
+	pitch.get_child(0).material_override = grass
+	var stadium := preload("res://stadium.gd").new()
+	stadium.name = "Stadium"
+	add_child(stadium)
+	var paint := Color("e3e5cf")
+	# Full 105 × 68 m pitch.
+	for x in [-34.0,34.0]:
+		create_static_box("touchline",Vector3(x,0.012,0),Vector3(0.12,0.015,105),paint,false)
+	for z in [-52.5,0.0,52.5]:
+		create_static_box("line",Vector3(0,0.012,z),Vector3(68,0.015,0.12),paint,false)
+	for side in [-1,1]:
+		for width_depth in [Vector2(40.32,16.5),Vector2(18.32,5.5)]:
+			create_static_box("area_line",Vector3(0,0.012,side*(GOAL_Z-width_depth.y)),Vector3(width_depth.x,0.015,0.075),paint,false)
+			for edge in [-1,1]:
+				create_static_box("area_edge",Vector3(edge*width_depth.x/2,0.012,side*(GOAL_Z-width_depth.y/2)),Vector3(0.075,0.015,width_depth.y),paint,false)
+		create_static_box("penalty_spot",Vector3(0,0.013,side*(GOAL_Z-11)),Vector3(0.17,0.015,0.17),paint,false)
+	var ring := MeshInstance3D.new()
+	var torus := TorusMesh.new()
+	torus.inner_radius = 9.09
+	torus.outer_radius = 9.21
+	torus.rings = 96
+	torus.ring_segments = 8
+	ring.mesh = torus
+	ring.position.y = 0.014
+	ring.scale.y = 0.15
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = paint
+	ring.material_override = mat
+	add_child(ring)
 
 func create_goal(side: int) -> void:
 	var goal_z := GOAL_Z * side
-	var frame_color := Color("f8fafc")
-	create_static_box("post", Vector3(-GOAL_WIDTH / 2.0, GOAL_HEIGHT / 2.0, goal_z), Vector3(0.16, GOAL_HEIGHT, 0.16), frame_color)
-	create_static_box("post", Vector3(GOAL_WIDTH / 2.0, GOAL_HEIGHT / 2.0, goal_z), Vector3(0.16, GOAL_HEIGHT, 0.16), frame_color)
-	create_static_box("crossbar", Vector3(0, GOAL_HEIGHT, goal_z), Vector3(GOAL_WIDTH, 0.16, 0.16), frame_color)
-	create_static_box("net_back", Vector3(0, GOAL_HEIGHT / 2.0, goal_z + 1.0 * side), Vector3(GOAL_WIDTH, GOAL_HEIGHT, 0.08), Color(0.8, 0.9, 1.0, 0.16), false)
+	for x in [-GOAL_WIDTH / 2.0, GOAL_WIDTH / 2.0]:
+		create_goal_post(Vector3(x,GOAL_HEIGHT/2.0,goal_z),GOAL_HEIGHT,false)
+	create_goal_post(Vector3(0,GOAL_HEIGHT,goal_z),GOAL_WIDTH,true)
+	get_node("Stadium").goal(side)
 
-	var goal_area := Area3D.new()
-	goal_area.name = "goal_area_%s" % side
-	goal_area.position = Vector3(0, GOAL_HEIGHT / 2.0, goal_z + 0.35 * side)
+func create_goal_post(location: Vector3, length: float, horizontal: bool) -> void:
+	var body := StaticBody3D.new()
+	body.position = location
+	body.add_to_group("woodwork")
+	var material := PhysicsMaterial.new()
+	material.bounce = 0.8
+	material.friction = 0.15
+	body.physics_material_override = material
 	var collision := CollisionShape3D.new()
-	var shape := BoxShape3D.new()
-	shape.size = Vector3(GOAL_WIDTH - 0.25, GOAL_HEIGHT - 0.2, 0.45)
-	collision.shape = shape
-	goal_area.add_child(collision)
-	goal_area.body_entered.connect(_on_goal_body_entered.bind(side))
-	add_child(goal_area)
+	var cylinder := CylinderShape3D.new()
+	cylinder.radius = 0.08
+	cylinder.height = length
+	collision.shape = cylinder
+	if horizontal: collision.rotation.z = PI / 2.0
+	body.add_child(collision)
+	add_child(body)
+
+func _physics_process(_delta: float) -> void:
+	if not ball_in_flight:
+		return
+	# Count only once the complete ball crosses the line inside the frame.
+	var plane_z := shot_goal * (GOAL_Z + BALL_RADIUS)
+	if (previous_ball_position.z - plane_z) * shot_goal < 0 and (ball.position.z - plane_z) * shot_goal >= 0:
+		var fraction := (plane_z - previous_ball_position.z) / (ball.position.z - previous_ball_position.z)
+		var crossing := previous_ball_position.lerp(ball.position, fraction)
+		if absf(crossing.x) < GOAL_WIDTH/2.0 - 0.08 and crossing.y < GOAL_HEIGHT - 0.08 and crossing.y >= BALL_RADIUS - 0.04:
+			resolve_shot(true, "¡Palo y gol!" if hit_woodwork else "¡Gol!")
+		else:
+			resolve_shot(false, "¡Palo y afuera!" if hit_woodwork else "¡Afuera!")
+	previous_ball_position = ball.position
+	last_flight_velocity = ball.linear_velocity
 
 func create_static_box(node_name: String, location: Vector3, dimensions: Vector3, color: Color, collide := true) -> StaticBody3D:
 	var body := StaticBody3D.new()
@@ -248,9 +351,8 @@ func create_ball() -> RigidBody3D:
 	mesh.radius = BALL_RADIUS
 	mesh.height = BALL_RADIUS * 2.0
 	visible.mesh = mesh
-	var material := StandardMaterial3D.new()
-	material.albedo_color = Color("f8fafc")
-	material.roughness = 0.3
+	var material := ShaderMaterial.new()
+	material.shader = preload("res://shaders/ball.gdshader")
 	visible.material_override = material
 	new_ball.add_child(visible)
 	add_child(new_ball)
@@ -282,6 +384,21 @@ func create_interface() -> void:
 	shot_meter.offset_right = -20
 	shot_meter.offset_top = -190
 	shot_meter.offset_bottom = -76
+	defense_target = preload("res://defense_target.gd").new()
+	canvas.add_child(defense_target)
+	defense_target.hide()
+	match_overlay = preload("res://match_overlay.gd").new()
+	add_child(match_overlay)
+	match_overlay.exit_requested.connect(func() -> void: get_tree().change_scene_to_file("res://Menu.tscn"))
+	match_overlay.pause_changed.connect(func(paused: bool) -> void:
+		if paused:
+			touch_aiming = false
+		if paused and is_charging:
+			is_charging = false
+			shot_power = 0.0
+			shot_meter.reset()
+	)
+
 
 func make_label(location: Vector2, font_size: int, color: Color) -> Label:
 	var label := Label.new()
@@ -292,54 +409,81 @@ func make_label(location: Vector2, font_size: int, color: Color) -> Label:
 	return label
 
 func start_attack() -> void:
+	match_overlay.result_label.hide()
 	phase = Phase.ATTACK
 	is_charging = false
 	shot_power = 0.0
 	shot_meter.reset()
+	defense_target.hide()
+	touch_aiming = false
+	away_keeper.show()
 	away_keeper.reset_pose()
 	home_keeper.reset_pose()
 	refresh_aim_marker()
-	reset_ball(Vector3(0, BALL_RADIUS + 0.02, 3.0))
+	reset_ball(Vector3(0, BALL_RADIUS + 0.02, -GOAL_Z + shooting_distance()))
+	var identity := ConfigFile.new()
+	identity.load(save_path)
+	kicker.apply_identity(int(identity.get_value("appearance","striker",0)),player_name,int(identity.get_value("appearance","number",10)),preload("res://footballer_model.gd").custom_profile(identity))
+	kicker.reset_pose(ball.position, -1)
 	look_from_kicker()
 	status_label.text = "%s · tiro %s" % [current_player_label(), turn_label()]
 	hint_label.text = "Apuntá con el mouse · Mantené clic o ESPACIO · Soltá cuando la barra pase por el centro"
 	update_score()
 
 func start_defense() -> void:
+	match_overlay.result_label.hide()
 	phase = Phase.DEFEND
 	shot_meter.hide()
+	away_keeper.hide()
 	away_keeper.reset_pose()
 	home_keeper.reset_pose()
 	aim_marker.hide()
 	keeper_lane = 0
 	keeper_height = 0
 	keeper_dived = false
+	touch_aiming = false
+	defense_aim = Vector2(0.0, 1.45)
 	defense_countdown = 2.2
-	reset_ball(Vector3(0, BALL_RADIUS + 0.02, -9.5))
+	reset_ball(Vector3(0, BALL_RADIUS + 0.02, GOAL_Z - shooting_distance()))
+	var rival_index := randi_range(0,2)
+	kicker.apply_identity(rival_index,preload("res://footballer_model.gd").PROFILES[rival_index].name,randi_range(7,11))
+	kicker.reset_pose(ball.position, 1)
 	look_from_keeper()
+	refresh_defense_target()
 	status_label.text = "Turno %s: atajás" % turn_label()
-	hint_label.text = "Atajá con clic o ← / ESPACIO / → · W alta / S baja · Esperá el tiro para estirarte"
+	hint_label.text = "Esperá el remate · Mouse: apuntá y hacé clic · Táctil: arrastrá y soltá · ← / ESPACIO / →, W alta / S baja"
 	update_score()
 
 func fire_player_shot() -> void:
 	if phase != Phase.ATTACK or ball_in_flight:
 		return
-	ball_in_flight = true
-	shot_goal = -1
-	shot_time = 0.0
-	resolved = false
+	phase = Phase.KICKING
+	ball.freeze = true
 	last_accuracy = shot_meter.accuracy()
 	shot_meter.lock_shot()
 	var target := player_shot_target(last_accuracy)
 	is_charging = false
 	aim_marker.hide()
-	var flight_time := lerpf(1.4, 0.75, shot_power)
-	var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity", 9.8)
-	var velocity := (target - ball.position) / flight_time + Vector3.UP * gravity * ball.gravity_scale * flight_time * 0.5
-	ball.linear_velocity = velocity
-	ball.angular_velocity = Vector3(0, 0, spin * 16.0)
-	move_keeper_for_attack(target)
-	status_label.text = "%s · precisión %d%%" % [shot_meter.feedback, roundi(last_accuracy * 100)]
+	kicker.kick(func() -> void:
+		phase = Phase.ATTACK
+		match_audio.play_effect("kick", ball.global_position)
+		launch_ball(target, lerpf(1.65, 0.75, shot_power), -1)
+		move_keeper_for_attack(target)
+		status_label.text = "%s · precisión %d%%" % [shot_meter.feedback, roundi(last_accuracy * 100)]
+	)
+
+func launch_ball(target: Vector3, flight_time: float, side: int) -> void:
+	ball.freeze = false
+	ball_in_flight = true
+	shot_goal = side
+	shot_time = 0.0
+	resolved = false
+	hit_woodwork = false
+	previous_ball_position = ball.position
+	var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity",9.8)
+	ball.linear_velocity = (target-ball.position)/flight_time + Vector3.UP*gravity*ball.gravity_scale*flight_time*0.5
+	last_flight_velocity = ball.linear_velocity
+	ball.angular_velocity = Vector3(-8,0,spin*16)
 
 func create_aim_marker() -> MeshInstance3D:
 	var marker := MeshInstance3D.new()
@@ -356,7 +500,7 @@ func create_aim_marker() -> MeshInstance3D:
 
 func refresh_aim_marker() -> void:
 	aim_marker.visible = phase == Phase.ATTACK and not ball_in_flight
-	aim_marker.position = Vector3(aim_x * 3.05, 1.35 + aim_y * 0.95, -GOAL_Z + 0.2)
+	aim_marker.position = Vector3(aim_x * 3.7, 1.5 + aim_y * 1.1, -GOAL_Z + 0.2)
 	aim_marker.scale = Vector3.ONE * (1.0 + shot_power * 0.6)
 
 func set_attack_target_from_screen(screen_position: Vector2) -> void:
@@ -364,91 +508,202 @@ func set_attack_target_from_screen(screen_position: Vector2) -> void:
 	var hit: Variant = goal_plane.intersects_ray(camera.project_ray_origin(screen_position), camera.project_ray_normal(screen_position))
 	if hit == null:
 		return
-	aim_x = clampf(hit.x / 3.05, -1.0, 1.0)
-	aim_y = clampf((hit.y - 1.35) / 0.95, -1.0, 1.0)
+	aim_x = clampf(hit.x / 3.7, -2.3, 2.3)
+	aim_y = clampf((hit.y - 1.5) / 1.1, -1.15, 3.5)
 	refresh_aim_marker()
 
-func lane_from_screen_x(screen_x: float) -> int:
-	var width := get_viewport().get_visible_rect().size.x
-	return -1 if screen_x < width / 3.0 else 1 if screen_x > width * 2.0 / 3.0 else 0
+func defense_goal_rect() -> Rect2:
+	var top_left := camera.unproject_position(Vector3(-GOAL_WIDTH * 0.5, GOAL_HEIGHT, GOAL_Z))
+	var bottom_right := camera.unproject_position(Vector3(GOAL_WIDTH * 0.5, 0.0, GOAL_Z))
+	return Rect2(top_left, bottom_right - top_left).abs()
+
+func defense_target_from_screen(screen_position: Vector2) -> Vector2:
+	var left_post := camera.unproject_position(Vector3(-GOAL_WIDTH * 0.5, 0.0, GOAL_Z))
+	var right_post := camera.unproject_position(Vector3(GOAL_WIDTH * 0.5, 0.0, GOAL_Z))
+	var top := camera.unproject_position(Vector3(0.0, GOAL_HEIGHT, GOAL_Z))
+	var bottom := camera.unproject_position(Vector3(0.0, 0.0, GOAL_Z))
+	var horizontal := clampf((screen_position.x - left_post.x) / (right_post.x - left_post.x), 0.0, 1.0)
+	var vertical := clampf((screen_position.y - top.y) / (bottom.y - top.y), 0.0, 1.0)
+	return Vector2(lerpf(-4.0, 4.0, horizontal), lerpf(2.65, 0.3, vertical))
+
+func defense_screen_from_target(target: Vector2) -> Vector2:
+	var left_post := camera.unproject_position(Vector3(-GOAL_WIDTH * 0.5, 0.0, GOAL_Z))
+	var right_post := camera.unproject_position(Vector3(GOAL_WIDTH * 0.5, 0.0, GOAL_Z))
+	var top := camera.unproject_position(Vector3(0.0, GOAL_HEIGHT, GOAL_Z))
+	var bottom := camera.unproject_position(Vector3(0.0, 0.0, GOAL_Z))
+	return Vector2(lerpf(left_post.x, right_post.x, (target.x + 4.0) / 8.0), lerpf(top.y, bottom.y, (2.65 - target.y) / 2.35))
+
+func refresh_defense_target() -> void:
+	defense_target.show_target(defense_goal_rect(), defense_screen_from_target(defense_aim), keeper_dived)
+
+func preview_defense_target(screen_position: Vector2) -> void:
+	if phase != Phase.DEFEND or keeper_dived:
+		return
+	defense_aim = defense_target_from_screen(screen_position)
+	defense_target.set_target(defense_screen_from_target(defense_aim))
+
+func dive_home_keeper_from_screen(screen_position: Vector2) -> void:
+	if phase != Phase.DEFEND or keeper_dived:
+		return
+	defense_aim = defense_target_from_screen(screen_position)
+	keeper_lane = -1 if defense_aim.x < -1.25 else 1 if defense_aim.x > 1.25 else 0
+	keeper_height = 1 if defense_aim.y > 1.78 else -1 if defense_aim.y < 0.92 else 0
+	commit_home_keeper_dive(defense_aim.x * 0.78, lerpf(0.65, 1.6, clampf((defense_aim.y - 0.3) / 2.35, 0.0, 1.0)))
 
 func player_shot_target(accuracy: float) -> Vector3:
 	# Missing the timing pushes the shot further toward the aimed side, as in HTML.
 	var direction := signf(aim_x) if absf(aim_x) > 0.05 else signf(shot_meter.indicator - 0.5)
 	var error := (1.0 - accuracy) * 2.5
-	return Vector3(aim_x * 3.05 + direction * error, 1.35 + aim_y * 0.95 + error * 0.18, -GOAL_Z - 0.3)
+	return Vector3(aim_x * 3.7 + direction * error, 1.5 + aim_y * 1.1 + error * 0.18, -GOAL_Z - 0.3)
 
-func move_keeper_for_attack(target: Vector3) -> void:
-	# A delayed, imperfect read of the shot; no random dive in the opposite direction.
-	var error := 0.45
-	var reach := 0.82
-	var delay := 0.24
-	if difficulty == "facil":
-		error = 0.9
-		reach = 0.65
-		delay = 0.42
-	elif difficulty == "dificil":
-		error = 0.18
-		reach = 0.95
-		delay = 0.12
-	var read_x := target.x + randf_range(-error, error)
-	away_keeper.dive(read_x * reach, target.y * 0.75, randf_range(delay - 0.04, delay + 0.04))
+func keeper_wrong_way_chance() -> float:
+	return 0.60 if difficulty == "facil" else 0.20 if difficulty == "dificil" else 0.40
+
+func keeper_read(target: Vector3, roll: float) -> Vector3:
+	var error := 0.18 if difficulty == "dificil" else 0.45
+	var reach := 0.95 if difficulty == "dificil" else 0.82
+	var read_x := target.x + keeper_rng.randf_range(-error,error)
+	if roll < keeper_wrong_way_chance():
+		read_x = -signf(target.x) * 3.1 if absf(target.x) > 0.2 else (3.1 if keeper_rng.randf() > 0.5 else -3.1)
+		return Vector3(read_x,0.8,0)
+	return Vector3(clampf(read_x*reach,-3.25,3.25),clampf(target.y*0.75,0.65,1.6),0)
+
+func move_keeper_for_attack(target: Vector3, decision_roll := -1.0) -> void:
+	var delay := 0.12 if difficulty == "dificil" else 0.24
+	var roll := keeper_rng.randf() if decision_roll < 0.0 else decision_roll
+	var read := keeper_read(target,roll)
+	if roll < keeper_wrong_way_chance():
+		# Commit to the wrong side before the ball arrives; the save still depends
+		# on physical contact rather than a hidden outcome switch.
+		away_keeper.dive(read.x,read.y,0.05)
+		return
+	# Slow shots arrive after the original dive has already landed. Time the
+	# extension for the ball crossing the keeper plane, including its arc.
+	var flight := lerpf(1.65,0.75,shot_power)
+	var fraction := clampf((away_keeper.position.z-ball.position.z)/(target.z-ball.position.z),0.0,1.0)
+	var arrival := flight*fraction
+	var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity",9.8)*ball.gravity_scale
+	var height := lerpf(ball.position.y,target.y,fraction)+0.5*gravity*flight*flight*fraction*(1.0-fraction)
+	read.y = clampf(height-0.25,0.65,1.6)
+	delay = maxf(delay,arrival-0.43)
+	away_keeper.dive(read.x,read.y,keeper_rng.randf_range(delay-0.025,delay+0.025))
 
 func fire_ai_shot() -> void:
 	if phase != Phase.DEFEND or ball_in_flight:
 		return
-	ball_in_flight = true
-	shot_goal = 1
-	shot_time = 0.0
-	resolved = false
+	phase = Phase.KICKING
+	ball.freeze = true
 	var target := Vector3(randf_range(-2.9, 2.9), randf_range(0.55, 2.25), GOAL_Z + 0.3)
-	var velocity := (target - ball.position) / 1.05 + Vector3.UP * 3.0
-	ball.linear_velocity = velocity
-	ball.angular_velocity = Vector3(0, randf_range(-11.0, 11.0), 0)
-	status_label.text = "El rival patea"
-	if not keeper_dived:
-		hint_label.text = "¡Todavía podés estirarte con ESPACIO!"
+	kicker.kick(func() -> void:
+		phase = Phase.DEFEND
+		match_audio.play_effect("kick", ball.global_position)
+		launch_ball(target,AI_SHOT_FLIGHT_TIME,1)
+		var lane := "izquierda" if target.x < -0.85 else "derecha" if target.x > 0.85 else "centro"
+		var height := "alto" if target.y > 1.7 else "bajo" if target.y < 1.0 else "medio"
+		status_label.text = "¡Tiro %s %s!" % [lane, height]
+		if not keeper_dived:
+			hint_label.text = "¡Estirate ahora! Apuntá al balón y clic, o arrastrá y soltá · ← / ESPACIO / →, W alta / S baja"
+	)
 
 func dive_home_keeper(lane: int) -> void:
 	if phase != Phase.DEFEND or keeper_dived:
 		return
 	keeper_lane = lane
-	keeper_dived = true
 	var y := 1.6 if keeper_height > 0 else 0.65 if keeper_height < 0 else 1.15
-	home_keeper.dive(keeper_lane * 2.35, y)
+	defense_aim = Vector2(keeper_lane * 3.97, 2.65 if keeper_height > 0 else 0.3 if keeper_height < 0 else 1.45)
+	commit_home_keeper_dive(keeper_lane * 3.10, y)
+
+func commit_home_keeper_dive(x: float, y: float) -> void:
+	keeper_dived = true
+	touch_aiming = false
+	defense_target.set_target(defense_screen_from_target(defense_aim), true)
+	home_keeper.dive(x, y)
 	status_label.text = "Estirada: %s" % keeper_direction_name()
 
 func _on_ball_contact(body: Node) -> void:
 	if not ball_in_flight:
 		return
+	if body.is_in_group("woodwork"):
+		if not hit_woodwork:
+			match_audio.play_effect("post", ball.global_position)
+		hit_woodwork = true
+		status_label.text = "¡Palo!"
 	if (shot_goal == -1 and body == away_keeper) or (shot_goal == 1 and body == home_keeper):
 		# Defer physics mutations until after the contact callback.
-		resolve_shot.call_deferred(false, "¡Atajada!")
+		show_save.call_deferred(body)
 
-func _on_goal_body_entered(body: Node3D, side: int) -> void:
-	if body != ball or not ball_in_flight or side != shot_goal:
-		return
-	resolve_shot(true, "¡Gol!")
+func show_net_goal() -> void:
+	if shot_goal == 1:
+		# Return the local net to full strength for the impact animation.
+		get_node("Stadium").set_net_opacity(1, 1.0)
+	var impact := Vector3(clampf(ball.position.x,-3.85,3.85),clampf(ball.position.y,0.3,2.6),shot_goal*(GOAL_Z+1.75))
+	ball_effect = create_tween().set_process_mode(Tween.TWEEN_PROCESS_PHYSICS)
+	ball_effect.tween_property(ball,"position",impact,0.14)
+	ball_effect.tween_callback(func() -> void:
+		get_node("Stadium").ripple_net(shot_goal,impact)
+		match_audio.play_effect("net", impact)
+	)
+	ball_effect.tween_property(ball,"position",Vector3(impact.x,BALL_RADIUS,shot_goal*(GOAL_Z+1.2)),0.48).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 
-func resolve_shot(scored: bool, message: String) -> void:
+func show_save(keeper: Keeper) -> void:
+	if resolved or not ball_in_flight: return
+	match_audio.play_effect("save", ball.global_position)
+	var incoming := last_flight_velocity
+	var offset := absf(ball.position.x-keeper.position.x)
+	var caught := should_hold_save(incoming.length(),offset,randf())
+	resolve_shot(false,"¡Atajada!",not caught)
+	if caught:
+		keeper.catch_pose(shot_goal)
+		holding_keeper = keeper
+		ball.global_position = keeper.held_ball_position(shot_goal)
+	else:
+		# A visible parry back into the field; the save is already recorded once.
+		ball.add_collision_exception_with(keeper)
+		ball.freeze = false
+		var lateral := signf(ball.position.x-keeper.position.x)
+		if lateral == 0: lateral = 1.0
+		ball.linear_velocity = Vector3(lateral*4.0,3.0,-shot_goal*maxf(absf(incoming.z)*0.45,5.0))
+		ball.angular_velocity = Vector3(6,4,8)
+		status_label.text = "¡Atajada con rebote!"
+
+func should_hold_save(speed: float, offset: float, roll: float) -> bool:
+	# Even a reachable shot can spill: 45% of otherwise catchable saves rebound.
+	return speed < 18.0 and offset < 0.6 and roll >= 0.45
+
+func resolve_shot(scored: bool, message: String, keep_ball_moving := false) -> void:
 	if resolved:
 		return
 	resolved = true
 	ball_in_flight = false
-	ball.linear_velocity = Vector3.ZERO
-	ball.angular_velocity = Vector3.ZERO
-	ball.freeze = true
+	if not keep_ball_moving:
+		ball.linear_velocity = Vector3.ZERO
+		ball.angular_velocity = Vector3.ZERO
+		ball.freeze = true
 	if scored:
 		if shot_goal == -1:
 			player_goals += 1
 			local_scores[active_player] += 1
 		else:
 			rival_goals += 1
+	if scored:
+		match_audio.play_goal_cheer()
+		show_net_goal()
 	status_label.text = message
+	var headline := "¡GOL!" if scored else "¡ATAJADA!" if message == "¡Atajada!" else "¡FUERA!"
+	if hit_woodwork and message != "¡Atajada!": headline = "¡PALO Y GOL!" if scored else "¡PALO Y FUERA!"
+	match_overlay.show_result(headline,Color("86efac") if scored else Color("facc15"))
 	update_score()
 	phase = Phase.RESOLVING
-	var timer := get_tree().create_timer(1.25)
-	timer.timeout.connect(advance_after_shot)
+	defense_target.hide()
+	var timer := Timer.new()
+	timer.one_shot = true
+	timer.wait_time = 1.9 if keep_ball_moving else 1.25
+	add_child(timer)
+	timer.timeout.connect(func() -> void:
+		timer.queue_free()
+		advance_after_shot()
+	)
+	timer.start()
 
 func advance_after_shot() -> void:
 	ball.freeze = false
@@ -481,6 +736,7 @@ func finish_match() -> void:
 	if phase == Phase.FINISHED:
 		return
 	phase = Phase.FINISHED
+	defense_target.hide()
 	ball_in_flight = false
 	is_charging = false
 	shot_meter.hide()
@@ -490,14 +746,19 @@ func finish_match() -> void:
 		best_score = round_best
 		save_best_score()
 	look_from_kicker()
+	var celebrating := player_count == 1 and player_goals > rival_goals
 	if player_count == 1:
-		status_label.text = "Ganaste el duelo" if player_goals > rival_goals else "El rival ganó el duelo"
+		status_label.text = "¡Ganó Jugador 1!" if player_goals > rival_goals else "¡Ganó la IA!"
 	else:
 		var winners: PackedStringArray = []
 		for i in range(player_count):
 			if local_scores[i] == round_best:
-				winners.append("J%s" % (i + 1))
-		status_label.text = "Gana %s" % winners[0] if winners.size() == 1 else "Empate: %s" % " / ".join(winners)
+				winners.append("Jugador %s" % (i + 1))
+		status_label.text = "¡Ganó %s!" % winners[0] if winners.size() == 1 else "Empate: %s" % " / ".join(winners)
+		celebrating = winners.size() == 1
+	match_overlay.show_result(status_label.text,Color("facc15"),true)
+	if celebrating:
+		show_victory_celebration()
 	hint_label.text = "Volviendo al inicio… · ESPACIO para continuar"
 	update_score()
 	# A node-owned timer is freed if Escape/Space leaves the scene early.
@@ -508,24 +769,47 @@ func finish_match() -> void:
 	return_timer.timeout.connect(func() -> void: get_tree().change_scene_to_file("res://Menu.tscn"))
 	return_timer.start()
 
+func show_victory_celebration() -> void:
+	ball.freeze = true
+	ball.hide()
+	away_keeper.hide()
+	var identity := ConfigFile.new()
+	identity.load(save_path)
+	kicker.apply_identity(int(identity.get_value("appearance","striker",0)),player_name,int(identity.get_value("appearance","number",10)),preload("res://footballer_model.gd").custom_profile(identity))
+	home_keeper.celebrate(Vector3(-1.6,0.9,3.0))
+	kicker.celebrate(Vector3(1.6,0,3.0))
+	camera.position = Vector3(0,2.6,8.8)
+	camera.look_at(Vector3(0,1.2,3.0),Vector3.UP)
+
 func current_player_label() -> String:
 	return player_name if player_count == 1 else "Jugador %s" % (active_player + 1)
 
 func reset_ball(location: Vector3) -> void:
+	if ball_effect: ball_effect.kill()
+	holding_keeper = null
+	ball.show()
+	ball.remove_collision_exception_with(away_keeper)
+	ball.remove_collision_exception_with(home_keeper)
+	ball_in_flight = false
+	resolved = false
+	hit_woodwork = false
 	ball.freeze = true
 	ball.position = location
 	ball.rotation = Vector3.ZERO
+	PhysicsServer3D.body_set_state(ball.get_rid(),PhysicsServer3D.BODY_STATE_TRANSFORM,ball.global_transform)
 	ball.linear_velocity = Vector3.ZERO
 	ball.angular_velocity = Vector3.ZERO
 	ball.freeze = false
 
 func look_from_kicker() -> void:
-	camera.position = Vector3(0, 3.1, 8.2)
-	camera.look_at(Vector3(0, 1.2, -GOAL_Z), Vector3.UP)
+	get_node("Stadium").set_net_opacity(1, 1.0)
+	camera.position = Vector3(0, 3.8, ball.position.z + 8.0)
+	camera.look_at(Vector3(0, 1.0, ball.position.z - 10.0), Vector3.UP)
 
 func look_from_keeper() -> void:
-	camera.position = Vector3(0, 2.5, GOAL_Z + 5.0)
-	camera.look_at(Vector3(0, 1.1, -5.0), Vector3.UP)
+	get_node("Stadium").set_net_opacity(1, 0.18)
+	camera.position = Vector3(0, 4.4, GOAL_Z + 8.0)
+	camera.look_at(Vector3(0, 1.2, GOAL_Z - shooting_distance() * 0.5), Vector3.UP)
 
 func update_score() -> void:
 	if player_count > 1:
@@ -535,7 +819,7 @@ func update_score() -> void:
 		score_label.text = "%s · %s tiros c/u" % ["   |   ".join(scores), shot_limit]
 		return
 	var suffix := " · muerte súbita" if sudden_death else ""
-	score_label.text = "%s %s — %s Rival%s · récord %s" % [player_name, player_goals, rival_goals, suffix, best_score]
+	score_label.text = "%s %s — %s Donnarumma%s · récord %s" % [player_name, player_goals, rival_goals, suffix, best_score]
 
 func update_aim_label() -> void:
 	if phase == Phase.ATTACK and not ball_in_flight:
@@ -571,12 +855,11 @@ func save_best_score() -> void:
 func apply_player_appearance() -> void:
 	var profile := ConfigFile.new()
 	profile.load(save_path)
-	var hair_colors := [Color("ead17c"), Color("69412d"), Color("171717")]
-	var hair := clampi(int(profile.get_value("appearance", "hair", 1)), 0, 2)
-	home_keeper.add_part(home_keeper.visual, Vector3(0, 0.85, 0), Vector3(0.36, 0.12, 0.36), hair_colors[hair])
-	var number := Label3D.new()
-	number.text = str(profile.get_value("appearance", "number", 10))
-	number.position = Vector3(0, 0.15, 0.18)
-	number.pixel_size = 0.005
-	number.font_size = 64
-	home_keeper.visual.add_child(number)
+	var human: Dictionary = preload("res://footballer_model.gd").keeper_profile(profile)
+	var hair_colors := ["c5aa6a","69412d","171717"]
+	if int(profile.get_value("appearance","keeper",0)) != 3:
+		human.hair = hair_colors[clampi(int(profile.get_value("appearance","hair",1)),0,2)]
+	home_keeper.build_body(human,str(profile.get_value("appearance","keeper_name",player_name)),int(profile.get_value("appearance","keeper_number",profile.get_value("appearance","number",10))))
+
+func shooting_distance() -> float:
+	return 24.0

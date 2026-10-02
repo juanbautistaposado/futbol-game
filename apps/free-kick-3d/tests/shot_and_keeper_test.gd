@@ -49,7 +49,9 @@ func run() -> void:
 	meter.indicator = 0.5
 	scene.shot_power = 0.8
 	scene.fire_player_shot()
-	check(scene.ball_in_flight and not meter.active, "Shot should launch and lock the meter")
+	check(scene.phase == scene.Phase.KICKING and scene.ball.freeze and not meter.active, "Wind-up must lock the ball and meter")
+	await create_timer(0.6).timeout
+	check(scene.ball_in_flight and not scene.ball.freeze, "Boot contact must launch the ball")
 	for i in range(600):
 		if scene.phase == scene.Phase.DEFEND:
 			break
@@ -57,7 +59,7 @@ func run() -> void:
 	check(scene.phase == scene.Phase.DEFEND, "Shot must transition to defense")
 	check(not meter.visible, "Attack meter must hide in defense")
 	scene.dive_home_keeper(-1)
-	check(scene.home_keeper.busy, "Player defense must use the dive animation")
+	check(scene.home_keeper.busy, "Player defense must use the dive animation immediately")
 	for i in range(1000):
 		if scene.phase == scene.Phase.ATTACK:
 			break

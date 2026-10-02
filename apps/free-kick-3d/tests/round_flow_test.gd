@@ -28,7 +28,7 @@ func run() -> void:
 		await create_timer(1.35).timeout
 	assert(game.phase == game.Phase.FINISHED)
 	assert(game.local_scores == [5, 0, 0, 0])
-	assert(game.status_label.text == "Gana J1")
+	assert(game.status_label.text == "¡Ganó Jugador 1!")
 	await scene_changed
 	Engine.time_scale = 1.0
 	assert(current_scene.name == "MainMenu")
