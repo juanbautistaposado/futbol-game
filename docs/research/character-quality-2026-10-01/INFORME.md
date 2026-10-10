@@ -69,3 +69,7 @@ La calidad visual se revisa con imágenes y movimiento: aprobar conteos de hueso
 - [Anatomía, forma y deformación](01-anatomia.md).
 - [Rutas de producción gratuitas y licencias](02-rutas-produccion.md).
 - [UV, materiales, rig e integración](03-materiales-integracion.md).
+
+## Aplicación posterior
+
+La ruta recomendada ya fue implementada y verificada. Véase [v3 aplicada: capturas, pruebas y rendimiento](v3-aplicada.md). Las observaciones anteriores describen el estado de la investigación previo a esa integración.

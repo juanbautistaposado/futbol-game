@@ -1,0 +1,13 @@
+{
+  "protected_parts_unchanged": true,
+  "rig_unchanged": true,
+  "animations_unchanged": true,
+  "palette_unchanged": true,
+  "height_unchanged": true,
+  "bone_count": 53,
+  "clip_count": 8,
+  "valid_meshes": {
+    "Beard": true,
+    "FootballerBody": true
+  }
+}

@@ -1,0 +1,305 @@
+{
+  "date": "2026-10-06",
+  "scope": "Read-only raw candidate audit. No model, source scene or runtime file changed.",
+  "candidate": {
+    "path": "source-assets/footballer/meshy-trial-2026-10-06/meshy-lite-raw.glb",
+    "bytes": 7765716,
+    "sha256": "0a2f7b66a9fc3edaf7175766d54647f667f38e33379b0dcb666fd21245febec3",
+    "glb_magic_valid": true,
+    "glb_version": 2,
+    "declared_bytes_match": true,
+    "generator": "pygltflib@v1.16.5",
+    "extensions_used": [],
+    "extensions_required": []
+  },
+  "scene": {
+    "scenes": 1,
+    "nodes": 1,
+    "node_names": [
+      null
+    ],
+    "node_matrices": [
+      [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    ],
+    "meshes": 1,
+    "primitives": 1,
+    "skins": 0,
+    "animations": 0,
+    "bones": 0,
+    "has_joints_0": false,
+    "has_weights_0": false,
+    "has_uv2": false,
+    "has_tangents": false,
+    "has_vertex_colors": false
+  },
+  "geometry": {
+    "draw_mode": 4,
+    "exported_vertices": 59055,
+    "index_count": 305712,
+    "triangles": 101904,
+    "minimum_index": 0,
+    "maximum_index": 59054,
+    "out_of_range_indices": 0,
+    "unreferenced_vertices": 0,
+    "bounds_min_xyz": [
+      -0.48114100098609924,
+      -0.953245997428894,
+      -0.17685100436210632
+    ],
+    "bounds_max_xyz": [
+      0.477508008480072,
+      0.946370005607605,
+      0.17649100720882416
+    ],
+    "size_xyz": [
+      0.9586490094661713,
+      1.899616003036499,
+      0.3533420115709305
+    ],
+    "height_y_m": 1.899616003036499,
+    "translate_y_to_ground_m": 0.953245997428894,
+    "nonfinite_positions": 0,
+    "triangle_area_min_m2": 1.267978812378046e-10,
+    "triangle_area_max_m2": 0.0007128867313673967,
+    "triangles_zero_area": 0,
+    "triangles_area_below_1e_10_m2": 0,
+    "signed_volume_m3": 0.10058863831929545,
+    "faces_with_avg_vertex_normal_against_winding": 73,
+    "normal_length_min": 0.9999999132766015,
+    "normal_length_max": 1.0000001157789629,
+    "nonfinite_normals": 0,
+    "welded_topology": [
+      {
+        "method": "exact float position",
+        "grid_spacing_m": null,
+        "vertices": 50944,
+        "duplicate_position_splits": 8111,
+        "edges": 152856,
+        "triangles": 101904,
+        "components": 1,
+        "component_vertex_counts_desc": [
+          50944
+        ],
+        "open_boundary_edges": 0,
+        "nonmanifold_edges": 0,
+        "same_direction_shared_edges": 0,
+        "collapsed_triangles_after_welding": 0,
+        "duplicate_unordered_faces": 0,
+        "euler_characteristic": -8,
+        "genus_if_closed_orientable": 5
+      },
+      {
+        "method": "position rounded to 1e-6 grid",
+        "grid_spacing_m": 1e-06,
+        "vertices": 50944,
+        "duplicate_position_splits": 8111,
+        "edges": 152856,
+        "triangles": 101904,
+        "components": 1,
+        "component_vertex_counts_desc": [
+          50944
+        ],
+        "open_boundary_edges": 0,
+        "nonmanifold_edges": 0,
+        "same_direction_shared_edges": 0,
+        "collapsed_triangles_after_welding": 0,
+        "duplicate_unordered_faces": 0,
+        "euler_characteristic": -8,
+        "genus_if_closed_orientable": 5
+      }
+    ]
+  },
+  "uv0": {
+    "count": 59055,
+    "bounds_min_uv": [
+      7.300000288523734e-05,
+      1.4007091522216797e-05
+    ],
+    "bounds_max_uv": [
+      0.9922209978103638,
+      0.9999989867210388
+    ],
+    "out_of_0_1_vertices": 0,
+    "zero_or_near_zero_area_uv_triangles": 0,
+    "uv_overlap_evaluated": false
+  },
+  "materials": {
+    "count": 1,
+    "names": [
+      null
+    ],
+    "definitions": [
+      {
+        "pbrMetallicRoughness": {
+          "baseColorFactor": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "metallicFactor": 1.0,
+          "roughnessFactor": 1.0,
+          "baseColorTexture": {
+            "index": 0,
+            "texCoord": 0
+          },
+          "metallicRoughnessTexture": {
+            "index": 1,
+            "texCoord": 0
+          }
+        },
+        "normalTexture": {
+          "index": 2,
+          "texCoord": 0
+        },
+        "alphaMode": "OPAQUE",
+        "doubleSided": true
+      }
+    ],
+    "separate_customizable_regions": false,
+    "images": [
+      {
+        "index": 0,
+        "role": "base_color",
+        "mime_type": "image/jpeg",
+        "width": 2048,
+        "height": 2048,
+        "encoded_bytes": 1885458,
+        "sha256": "9724c3c15e968af829892cce9acd792bbb0cee8a0712963869e1f5a7dc85759f",
+        "rgb_extrema": [
+          [
+            0,
+            255
+          ],
+          [
+            0,
+            255
+          ],
+          [
+            0,
+            255
+          ]
+        ],
+        "rgb_mean_128_sample": [
+          159.68555,
+          151.00012,
+          144.69165
+        ]
+      },
+      {
+        "index": 1,
+        "role": "metallic_roughness",
+        "mime_type": "image/jpeg",
+        "width": 2048,
+        "height": 2048,
+        "encoded_bytes": 1167648,
+        "sha256": "200a292d2c735dc06e1e5dccc9673c6dd25549690e6cf66b2f7cad19a6259416",
+        "rgb_extrema": [
+          [
+            224,
+            255
+          ],
+          [
+            30,
+            181
+          ],
+          [
+            0,
+            118
+          ]
+        ],
+        "rgb_mean_128_sample": [
+          254.8988,
+          121.96057,
+          0.41278
+        ]
+      },
+      {
+        "index": 2,
+        "role": "normal",
+        "mime_type": "image/jpeg",
+        "width": 2048,
+        "height": 2048,
+        "encoded_bytes": 1597667,
+        "sha256": "eb2989b76fe18aa07c96cdac052f98c34797b6573f6d53e4140bfd566789392e",
+        "rgb_extrema": [
+          [
+            40,
+            218
+          ],
+          [
+            44,
+            206
+          ],
+          [
+            197,
+            255
+          ]
+        ],
+        "rgb_mean_128_sample": [
+          127.25616,
+          126.5658,
+          253.33984
+        ]
+      }
+    ],
+    "total_encoded_image_bytes": 4650773,
+    "texture_input_visual_inspection": "Inspected base-color atlas: white jersey/socks, dark shorts, skin/head and black boots share one fragmented atlas. This is not a region segmentation or deformation audit."
+  },
+  "baseline_comparison": {
+    "footballer_triangles": 89843,
+    "goalkeeper_triangles": 96571,
+    "triangles_increase_vs_footballer_percent": 13.424529456941547,
+    "triangles_increase_vs_goalkeeper_percent": 5.522361785629215,
+    "footballer_bytes": 7365500,
+    "goalkeeper_bytes": 7638836,
+    "baseline_height_m": 1.898872600402683,
+    "height_delta_percent": 0.03914968458960111,
+    "runtime_scale_to_keep": 1.15
+  },
+  "integration_status": {
+    "direct_drop_in": false,
+    "animation_ready": false,
+    "base_for_static_aesthetic_comparison": true,
+    "aesthetic_improvement_over_baseline": "Observed coordinator Godot front/back/profile comparisons: more continuous sleeves, slim collar, cloth folds/drape, recognizable football shorts and moderate athletic chest. Static aesthetic improvement; not rig approval.",
+    "requires": [
+      "Ground/orientation alignment",
+      "Preserve existing face/hair/boots/gloves when adapting",
+      "Segment garment and body faces/materials or reconstruct garments",
+      "Transfer and correct 53-bone skin weights by region",
+      "UV2 dorsal mapping and exclusion of front/sleeves",
+      "Named runtime nodes/materials and existing eight clips",
+      "Geometry/texture budget reduction and browser profiling"
+    ],
+    "not_evaluated": [
+      "Self-intersections",
+      "Inside/outside clothing separation",
+      "Detailed joint edge flow or retopology quality",
+      "Animation deformation",
+      "Browser performance"
+    ],
+    "topology_caution": "UV/material splits were welded by exact positions and 1e-6 quantization before boundary checks. The candidate has one closed manifold component under those tests, not holes inferred from UV seams; closedness does not prove animation suitability.",
+    "visual_comparison_images": [
+      "docs/research/meshy-trial-2026-10-06/comparacion-front.png",
+      "docs/research/meshy-trial-2026-10-06/comparacion-back.png",
+      "docs/research/meshy-trial-2026-10-06/comparacion-profile.png"
+    ]
+  }
+}

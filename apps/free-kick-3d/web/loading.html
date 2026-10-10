@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="es">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0">
+		<title>$GODOT_PROJECT_NAME</title>
+		<style>
+@font-face { font-family: Archivo; src: url('archivo.ttf') format('truetype'); font-weight: 100 900; font-display: swap; }
+html, body, #canvas { margin: 0; padding: 0; border: 0; }
+body { color: #fff2d0; background: #211a2b; overflow: hidden; touch-action: none; font-family: Archivo, Arial, sans-serif; }
+#canvas { display: block; }
+#canvas:focus { outline: none; }
+#status { position: fixed; inset: 0; background: #211a2b; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; overflow: hidden; }
+#status::before, #status::after { content: ''; position: absolute; inset: 0; pointer-events: none; }
+#status::before { background: #3456e8; clip-path: polygon(0 0, 23% 0, 0 53%); }
+#status::after { background: #f05b3f; clip-path: polygon(92% 100%, 100% 69%, 100% 77%, 96% 100%); }
+#status #status-splash { position: relative; display: block; width: min(62vw, 460px); height: auto; max-height: 48vh; object-fit: contain; margin: 0; z-index: 1; }
+#status #status-splash.show-image--false { display: none; }
+#loading-copy { position: relative; margin: 0; color: #fff2d0; font-size: 17px; font-weight: 600; line-height: 1.4; z-index: 1; }
+#status-progress { display: none; position: relative; width: min(58vw, 320px); height: 7px; margin: 0; border: 0; border-radius: 0; overflow: hidden; accent-color: #f5d547; background: #493951; z-index: 1; }
+#status-progress::-webkit-progress-bar { background: #493951; }
+#status-progress::-webkit-progress-value { background: #f5d547; }
+#status-progress::-moz-progress-bar { background: #f5d547; }
+#status-notice { display: none; position: relative; width: min(76vw, 540px); box-sizing: border-box; padding: 20px; border-left: 5px solid #f05b3f; background: #30253c; color: #fff2d0; line-height: 1.5; text-align: center; z-index: 1; }
+@media (max-height: 450px) { #status { gap: 12px; } #status #status-splash { max-height: 55vh; width: min(44vw, 360px); } #loading-copy { font-size: 14px; } }
+</style>
+		$GODOT_HEAD_INCLUDE
+	</head>
+	<body>
+		<canvas id="canvas">
+			Tu navegador no permite mostrar el juego.
+		</canvas>
+
+		<noscript>
+			Activá JavaScript para jugar a Tiros Libres.
+		</noscript>
+
+		<div id="status">
+			<img id="status-splash" class="$GODOT_SPLASH_CLASSES" src="$GODOT_SPLASH" alt="Tiros Libres">
+			<p id="loading-copy" role="status">Preparando la cancha…</p>
+			<progress id="status-progress" aria-label="Carga del juego"></progress>
+			<div id="status-notice"></div>
+		</div>
+
+		<script src="$GODOT_URL"></script>
+		<script>
+const GODOT_CONFIG = $GODOT_CONFIG;
+const GODOT_THREADS_ENABLED = $GODOT_THREADS_ENABLED;
+const engine = new Engine(GODOT_CONFIG);
+
+(function () {
+	const statusOverlay = document.getElementById('status');
+	const statusProgress = document.getElementById('status-progress');
+	const statusNotice = document.getElementById('status-notice');
+	const loadingCopy = document.getElementById('loading-copy');
+
+	let initializing = true;
+	let statusMode = '';
+
+	function setStatusMode(mode) {
+		if (statusMode === mode || !initializing) {
+			return;
+		}
+		if (mode === 'hidden') {
+			statusOverlay.remove();
+			initializing = false;
+			return;
+		}
+		statusOverlay.style.visibility = 'visible';
+		statusProgress.style.display = mode === 'progress' ? 'block' : 'none';
+		statusNotice.style.display = mode === 'notice' ? 'block' : 'none';
+		loadingCopy.style.display = mode === 'notice' ? 'none' : 'block';
+		statusMode = mode;
+	}
+
+	function setStatusNotice(text) {
+		while (statusNotice.lastChild) {
+			statusNotice.removeChild(statusNotice.lastChild);
+		}
+		const lines = text.split('\n');
+		lines.forEach((line) => {
+			statusNotice.appendChild(document.createTextNode(line));
+			statusNotice.appendChild(document.createElement('br'));
+		});
+	}
+
+	function displayFailureNotice(err) {
+		console.error(err);
+		if (err instanceof Error) {
+			setStatusNotice(err.message);
+		} else if (typeof err === 'string') {
+			setStatusNotice(err);
+		} else {
+			setStatusNotice('No se pudo cargar el juego. Recargá la página para intentar de nuevo.');
+		}
+		setStatusMode('notice');
+		initializing = false;
+	}
+
+	const missing = Engine.getMissingFeatures({
+		threads: GODOT_THREADS_ENABLED,
+	});
+
+	if (missing.length !== 0) {
+		if (GODOT_CONFIG['serviceWorker'] && GODOT_CONFIG['ensureCrossOriginIsolationHeaders'] && 'serviceWorker' in navigator) {
+			let serviceWorkerRegistrationPromise;
+			try {
+				serviceWorkerRegistrationPromise = navigator.serviceWorker.getRegistration();
+			} catch (err) {
+				serviceWorkerRegistrationPromise = Promise.reject(new Error('Service worker registration failed.'));
+			}
+			// There's a chance that installing the service worker would fix the issue
+			Promise.race([
+				serviceWorkerRegistrationPromise.then((registration) => {
+					if (registration != null) {
+						return Promise.reject(new Error('Service worker already exists.'));
+					}
+					return registration;
+				}).then(() => engine.installServiceWorker()),
+				// For some reason, `getRegistration()` can stall
+				new Promise((resolve) => {
+					setTimeout(() => resolve(), 2000);
+				}),
+			]).then(() => {
+				// Reload if there was no error.
+				window.location.reload();
+			}).catch((err) => {
+				console.error('Error while registering service worker:', err);
+			});
+		} else {
+			// Display the message as usual
+			const missingMsg = 'Error\nTu navegador no tiene las funciones necesarias para jugar. Probá con Chrome o Firefox:\n';
+			displayFailureNotice(missingMsg + missing.join('\n'));
+		}
+	} else {
+		setStatusMode('progress');
+		engine.startGame({
+			'onProgress': function (current, total) {
+				if (current > 0 && total > 0) {
+					statusProgress.value = current;
+					statusProgress.max = total;
+					const percent = Math.min(100, Math.floor(current / total * 100));
+					loadingCopy.textContent = percent === 100 ? 'Preparando la cancha…' : `Cargando el juego… ${percent}%`;
+				} else {
+					statusProgress.removeAttribute('value');
+					statusProgress.removeAttribute('max');
+				}
+			},
+		}).then(() => {
+			setStatusMode('hidden');
+		}, displayFailureNotice);
+	}
+}());
+		</script>
+	</body>
+</html>

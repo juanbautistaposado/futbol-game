@@ -1,0 +1,37 @@
+{
+  "date": "2026-10-09",
+  "runtime": "apps/free-kick-3d/assets/footballer/meshy_keeper.glb",
+  "source_blend": "source-assets/footballer/meshy_keeper.blend",
+  "base": "source-assets/footballer/meshy_player.blend",
+  "bones": 53,
+  "vertices": 50944,
+  "polygons": 101904,
+  "material_polygons": {
+    "jersey": 37055,
+    "gloves": 7416,
+    "base": 57433
+  },
+  "goalkeeper_channels_preserved": 1272,
+  "license": "CC-BY-4.0",
+  "author": "Meshy AI",
+  "extra_meshy_credits": 0,
+  "runtime_sha256": "dfe3eb635efc2ab8a83caec411a8c23529acdab892e29495258f2a9038a74413",
+  "source_blend_sha256": "a7f7124cef3d14abde57e5bbecd6df1e92729c8da6b58ba5066b62ae4ed14696",
+  "export_audit": {
+    "rig_exact": true,
+    "goalkeeper_clips_exact": true,
+    "animations": [
+      "Catch",
+      "Celebrate",
+      "Idle",
+      "Kick",
+      "SaveLeft",
+      "SaveLowLeft",
+      "SaveLowRight",
+      "SaveRight"
+    ],
+    "triangles": 101904,
+    "maximum_weight_sum_error": 1.3504177331924438e-07,
+    "bytes": 9556328
+  }
+}

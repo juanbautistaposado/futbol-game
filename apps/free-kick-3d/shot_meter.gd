@@ -1,4 +1,7 @@
 extends Control
+const Visual = preload("res://ui/visual_theme.gd")
+const SmoothPolygon = preload("res://ui/smooth_polygon.gd")
+var smooth_polygons := SmoothPolygon.new()
 
 # Same red / amber / green timing challenge as the Phaser prototype.
 var elapsed := 0.0
@@ -9,6 +12,12 @@ var feedback := "Mantené clic para cargar · soltá en el centro"
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	resized.connect(_on_resized)
+
+func _on_resized() -> void:
+	smooth_polygons.clear()
+	queue_redraw()
 
 func begin() -> void:
 	elapsed = 0.0
@@ -45,24 +54,23 @@ func reset() -> void:
 	queue_redraw()
 
 func _draw() -> void:
-	var font := ThemeDB.fallback_font
-	var width := size.x - 40.0
-	draw_style_box(panel_style(), Rect2(Vector2.ZERO, size))
-	draw_string(font, Vector2(20, 26), feedback, HORIZONTAL_ALIGNMENT_CENTER, width, 18, Color("f8fafc"))
-	var colors := [Color("ef5350"), Color("ffb547"), Color("55d98b"), Color("ffb547"), Color("ef5350")]
+	var w := size.x
+	var h := size.y
+	var left := 26.0
+	var width := w - 52.0
+	smooth_polygons.draw(self, PackedVector2Array([Vector2(18, 0), Vector2(w, 0), Vector2(w - 18, h - 8), Vector2(w - 30, h), Vector2(0, h)]), Visual.BASE)
+	smooth_polygons.draw(self, PackedVector2Array([Vector2(18, 0), Vector2(26, 0), Vector2(8, h - 7), Vector2(w - 26, h - 7), Vector2(w - 30, h), Vector2(0, h)]), Visual.ACCENT)
+	draw_string(Visual.EMPHASIS, Vector2(left, 28), "PRECISIÓN", HORIZONTAL_ALIGNMENT_LEFT, width, 18, Visual.INK)
+	draw_string(Visual.BODY, Vector2(left, 28), "POTENCIA %d%%" % roundi(power * 100), HORIZONTAL_ALIGNMENT_RIGHT, width, 16, Visual.INK)
+	var colors := [Visual.ACCENT, Visual.ENERGY, Visual.SUCCESS, Visual.ENERGY, Visual.ACCENT]
 	for i in range(5):
-		draw_rect(Rect2(20 + i * width / 5.0, 43, width / 5.0, 20), colors[i])
-	draw_line(Vector2(size.x / 2, 39), Vector2(size.x / 2, 67), Color.WHITE, 2)
-	var cursor := 20 + indicator * width
-	draw_rect(Rect2(cursor - 5, 37, 10, 32), Color("102132"))
-	draw_rect(Rect2(cursor - 3, 39, 6, 28), Color.WHITE)
-	draw_string(font, Vector2(20, 89), "PRECISIÓN", HORIZONTAL_ALIGNMENT_LEFT, width, 12, Color("b6cbdc"))
-	draw_string(font, Vector2(20, 89), "POTENCIA %d%%" % roundi(power * 100), HORIZONTAL_ALIGNMENT_RIGHT, width, 12, Color("b6cbdc"))
-	draw_rect(Rect2(20, 99, width, 5), Color("20394d"))
-	draw_rect(Rect2(20, 99, width * power, 5), Color("64c7ff"))
-
-func panel_style() -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.025, 0.065, 0.1, 0.94)
-	style.set_corner_radius_all(12)
-	return style
+		draw_rect(Rect2(left + i * width / 5.0, 44, width / 5.0 - 1, 25), colors[i])
+	var cursor := left + indicator * width
+	draw_circle(Vector2(cursor, 56.5), 24, Visual.BASE, false, 6, true)
+	draw_circle(Vector2(cursor, 56.5), 20, Visual.INK, false, 3, true)
+	draw_line(Vector2(cursor, 30), Vector2(cursor, 84), Visual.INK, 2, true)
+	draw_rect(Rect2(cursor - 4, 41, 8, 31), Visual.BASE)
+	draw_rect(Rect2(cursor - 2, 43, 4, 27), Visual.INK)
+	if active or feedback in ["¡PERFECTO!", "BUEN TIRO", "DESVIADO"]:
+		draw_string(Visual.BODY, Vector2(left, 90), feedback, HORIZONTAL_ALIGNMENT_LEFT, width, 14, Visual.INK)
+		draw_rect(Rect2(left + width * 0.65, 84, width * 0.35 * power, 4), Visual.ENERGY)

@@ -1,0 +1,251 @@
+{
+  "version": 3,
+  "date": "2026-10-01",
+  "tools": {
+    "mpfb": "2.0.17",
+    "mpfb_commit": "afb9f530a7c2741dedb8df0ebae2e0b183caec21",
+    "blender": "5.2.2 LTS",
+    "godot": "4.7.1 Compatibility"
+  },
+  "art_target": {
+    "height_m": 1.9,
+    "style": "fútbol estilizado: camiseta deportiva con caída libre, cuello fino y paneles tonales",
+    "skin_texture_size": 1024,
+    "kit_texture_size": 512,
+    "target_fps": 60,
+    "platform": "PC primero",
+    "hair_texture_size": 1024,
+    "short_hem_z_m": 0.695,
+    "sleeve_length_from_upperarm_m": 0.158,
+    "crotch_z_m": 0.72,
+    "jersey_texture_size": 512
+  },
+  "source_assets": [
+    {
+      "path": "eyebrows/eyebrow001/eyebrow001.mhclo",
+      "sha256": "54c8892c2ba577f4152d779ce1f20f7cd323beb8cbd9cb701796165c221b4f5b",
+      "license": "CC0-1.0",
+      "author": "makehuman_system"
+    },
+    {
+      "path": "eyebrows/eyebrow001/eyebrow001.mhmat",
+      "sha256": "976e5f4f1d3922d7a11c6e2db233f8b4584b068d00619d5749687e81c92d61fc",
+      "license": "CC0-1.0",
+      "author": "makehuman_system"
+    },
+    {
+      "path": "eyebrows/eyebrow001/eyebrow001.obj",
+      "sha256": "88b13146395133f3901715e11706cdfd293e5d6087ad7c5e01efe1485a26b513",
+      "license": "CC0-1.0",
+      "author": "makehuman_system"
+    },
+    {
+      "path": "eyebrows/eyebrow001/eyebrow001.png",
+      "sha256": "9940f7d0b1b223709a19b05156ba6f6e9e4dbdbced02d7574f4d51d72c58967b",
+      "license": "CC0-1.0",
+      "author": "makehuman_system"
+    },
+    {
+      "path": "eyes/low-poly/low-poly.mhclo",
+      "sha256": "68582e28e9176cba7cfcf35208f671b6201b8d1bc95c32decff61a3160ec34d8",
+      "license": "CC0-1.0",
+      "author": "makehuman_system"
+    },
+    {
+      "path": "eyes/low-poly/low-poly.obj",
+      "sha256": "783fe1e6331162c876520b4c2bed7a8ca06354ca15497e8ebd68bb1b59f4d3de",
+      "license": "CC0-1.0",
+      "author": "makehuman_system"
+    },
+    {
+      "path": "eyes/materials/brown.mhmat",
+      "sha256": "4abad93ce50541c08127721e77bce035640c9f16bed16cd0f5524b1cd5908465",
+      "license": "CC0-1.0",
+      "author": "makehuman_system"
+    },
+    {
+      "path": "eyes/materials/brown_eye.png",
+      "sha256": "4659691c7295ad6206c78b003e5fd0e5f91dcd53032fa914a229bb48cabe424b",
+      "license": "CC0-1.0",
+      "author": "makehuman_system"
+    },
+    {
+      "path": "hair/short04/short04.mhclo",
+      "sha256": "d60640aa4c4ffce1aa269647ba436b6ee0bb21bb948f927b84e27a48d2107157",
+      "license": "CC0-1.0",
+      "author": "makehuman_system"
+    },
+    {
+      "path": "hair/short04/short04.mhmat",
+      "sha256": "7a3ac74db8478aa0afdb8a596c6fe3997d1a8a09d12211d70e8f1e9f0b7e0e97",
+      "license": "CC0-1.0",
+      "author": "makehuman_system"
+    },
+    {
+      "path": "hair/short04/short04.obj",
+      "sha256": "676964a133ee35ffcea1195382bf75542da7a298931e4001bc7b0d7b707225de",
+      "license": "CC0-1.0",
+      "author": "makehuman_system"
+    },
+    {
+      "path": "hair/short04/short04_diffuse.png",
+      "sha256": "0bef7fc0e403db5a40fabb2111ebfa6f7e8158e204c6e56b8da98e9ef527846e",
+      "license": "CC0-1.0",
+      "author": "makehuman_system"
+    },
+    {
+      "path": "skins/young_caucasian_male/young_caucasian_male.mhmat",
+      "sha256": "6eda60b07ff2afbde078a2535ef3913593d84e9de92b2eb76c30f396a181fe2e",
+      "license": "CC0-1.0",
+      "author": "makehuman_system"
+    },
+    {
+      "path": "skins/young_caucasian_male/young_lightskinned_male_diffuse.png",
+      "sha256": "862a26e335e958b70534cb5f0d7c47ef30ab148a56c42b3e9da969cf76f12963",
+      "license": "CC0-1.0",
+      "author": "makehuman_system"
+    }
+  ],
+  "exports": [
+    {
+      "path": "apps/free-kick-3d/assets/footballer/footballer_v3.glb",
+      "sha256": "e2fe8de40974ce19ca7e4793c78cd4da1dde97197706f81cf8c7a965b0e40180",
+      "bytes": 7365500,
+      "triangles": 89843,
+      "bones": 53,
+      "surfaces": 11,
+      "embedded_images": 10,
+      "animations": [
+        "Catch",
+        "Celebrate",
+        "Idle",
+        "Kick",
+        "SaveLeft",
+        "SaveLowLeft",
+        "SaveLowRight",
+        "SaveRight"
+      ]
+    },
+    {
+      "path": "apps/free-kick-3d/assets/footballer/goalkeeper_v3.glb",
+      "sha256": "f3df19c4d21d319db2b6e92effb6acb6d121861346cd9e19ed0c1a677a4d75ea",
+      "bytes": 7638836,
+      "triangles": 96571,
+      "bones": 53,
+      "surfaces": 12,
+      "embedded_images": 10,
+      "animations": [
+        "Catch",
+        "Celebrate",
+        "Idle",
+        "Kick",
+        "SaveLeft",
+        "SaveLowLeft",
+        "SaveLowRight",
+        "SaveRight"
+      ]
+    }
+  ],
+  "benchmark": {
+    "hardware": "Apple M4",
+    "resolution": [
+      1280,
+      720
+    ],
+    "renderer": "Compatibility OpenGL 4.1 Metal",
+    "warmup_frames": 90,
+    "sample_frames": 300,
+    "bajo": {
+      "avg_ms": 8.13,
+      "p95_ms": 8.75,
+      "fps": 123.1,
+      "draw_calls": 233
+    },
+    "medio": {
+      "avg_ms": 10.88,
+      "p95_ms": 11.78,
+      "fps": 91.9,
+      "draw_calls": 973
+    },
+    "alto": {
+      "avg_ms": 11.21,
+      "p95_ms": 12.1,
+      "fps": 89.2,
+      "draw_calls": 973
+    },
+    "revision": "short-amplio-mangas-cintura-y-pesos-validados",
+    "date": "2026-10-03",
+    "earlier_attempt": {
+      "samples": {
+        "bajo": {
+          "avg_ms": 14.13,
+          "p95_ms": 20.9,
+          "fps": 70.8,
+          "draw_calls": 233
+        },
+        "medio": {
+          "avg_ms": 19.46,
+          "p95_ms": 23.66,
+          "fps": 51.4,
+          "draw_calls": 973
+        },
+        "alto": {
+          "avg_ms": 19.03,
+          "p95_ms": 23.46,
+          "fps": 52.5,
+          "draw_calls": 973
+        }
+      },
+      "note": "Antes de la limpieza final de pesos; escritorio con otras aplicaciones activas. No es una comparación aislada del coste del modelo."
+    },
+    "matches_current_exports": false,
+    "note": "Medición histórica anterior a esta revisión de short, mangas y pecho. No repetida en esta revisión."
+  },
+  "revision": "football-jersey-shoulder-drape-pass2-2026-10-04",
+  "revision_date": "2026-10-04",
+  "art_reference": {
+    "paths": [
+      "source-assets/footballer/references/football-strike-user-1.png",
+      "source-assets/footballer/references/football-strike-user-2.png",
+      "source-assets/footballer/references/football-strike-user-3.png"
+    ],
+    "source": "capturas proporcionadas por el usuario",
+    "usage": "corte y silueta; no assets/texturas del juego"
+  },
+  "locked_parts_audit": {
+    "weights_unchanged": true,
+    "dorsal_uv_unchanged": true,
+    "protected_parts_unchanged": true,
+    "rig_unchanged": true,
+    "animations_unchanged": true,
+    "palette_unchanged": true,
+    "height_unchanged": true,
+    "bone_count": 53,
+    "clip_count": 8,
+    "valid_meshes": {
+      "Beard": true,
+      "FootballerBody": true
+    },
+    "baseline": "primera pasada de camiseta, antes de refinar hombros, axila, mangas y pliegues",
+    "goalkeeper_export_unchanged": true
+  },
+  "jersey_authorship": {
+    "author": "geometría y atlas originales del proyecto",
+    "external_models_imported": false,
+    "research": "docs/research/jersey-quality-2026-10-04/",
+    "source": "apps/free-kick-3d/tools/tailor_footballer_jersey.py"
+  },
+  "shorts_revision": "football-shorts-low-crotch-2026-10-04",
+  "sleeves_revision": "football-sleeves-continuous-shoulder-2026-10-04",
+  "athletic_revision": "athletic-footballer-balanced-legs-2026-10-04",
+  "athletic_authorship": {
+    "source": "apps/free-kick-3d/tools/athletic_footballer.py",
+    "research": "docs/research/athletic-character-2026-10-04/",
+    "external_models_imported": false,
+    "target": "silueta atlética inspirada en referencias oficiales de Football Strike"
+  },
+  "athletic_roles": {
+    "footballer": "athletic-footballer-balanced-legs-2026-10-04",
+    "goalkeeper": "athletic-footballer-balanced-legs-2026-10-04"
+  }
+}

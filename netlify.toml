@@ -1,0 +1,7 @@
+# El juego se exporta localmente con scripts/export-web.sh antes de subirlo.
+# No conectar builds por Git hasta configurar Godot en el entorno de Netlify.
+[build]
+  publish = "apps/free-kick-3d/build/web"
+
+[dev]
+  framework = "#static"

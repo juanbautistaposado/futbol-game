@@ -1,6 +1,6 @@
 extends AnimatableBody3D
 const Human = preload("res://footballer_model.gd")
-const GOALKEEPER_SCENE = preload("res://assets/footballer/goalkeeper_v2.glb")
+const GOALKEEPER_SCENE = preload("res://assets/footballer/meshy_keeper.glb")
 const FootballerVisual = preload("res://footballer_visual.gd")
 
 var motion: Tween
@@ -44,23 +44,19 @@ func configure(side: int, shirt: Color) -> void:
 	add_child(dive_reach_collision)
 
 func build_body(profile: Dictionary, player_name: String, number: int) -> void:
-	for child in visual.get_children():
-		visual.remove_child(child)
-		child.queue_free()
-	Human.lettering(visual,player_name,number)
-	goalkeeper_visual = GOALKEEPER_SCENE.instantiate()
-	goalkeeper_visual.position.y = -0.86
-	goalkeeper_visual.rotation.y = PI
-	visual.add_child(goalkeeper_visual)
+	if goalkeeper_visual == null:
+		goalkeeper_visual = GOALKEEPER_SCENE.instantiate()
+		goalkeeper_visual.position.y = -0.86
+		goalkeeper_visual.rotation.y = PI
+		visual.add_child(goalkeeper_visual)
 	goalkeeper_animation = goalkeeper_visual.get_node("AnimationPlayer")
 	skeleton = goalkeeper_visual.get_node("FootballerRig/Skeleton3D")
 	left_hand_bone = skeleton.find_bone("Hand.L")
 	right_hand_bone = skeleton.find_bone("Hand.R")
 	var body: MeshInstance3D = goalkeeper_visual.get_node("FootballerRig/Skeleton3D/FootballerBody")
+	FootballerVisual.apply_meshy(body)
 	FootballerVisual.apply_profile(body,profile)
-	var beard: MeshInstance3D = goalkeeper_visual.get_node("FootballerRig/Skeleton3D/Beard")
-	beard.visible = bool(profile.beard)
-	FootballerVisual.apply_profile(beard,profile)
+	FootballerVisual.apply_lettering(goalkeeper_visual,body,player_name,number)
 	goalkeeper_animation.get_animation("Idle").loop_mode = Animation.LOOP_LINEAR
 	goalkeeper_animation.get_animation("Celebrate").loop_mode = Animation.LOOP_LINEAR
 	goalkeeper_animation.play("Idle")

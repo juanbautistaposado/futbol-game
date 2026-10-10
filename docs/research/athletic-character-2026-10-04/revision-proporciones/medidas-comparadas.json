@@ -1,0 +1,20 @@
+{
+  "before": {
+    "thigh_radius_m": 0.08845968337683946,
+    "calf_radius_m": 0.06477314030047665,
+    "chest_width_m": 0.5411182045936584,
+    "chest_depth_m": 0.33083000779151917
+  },
+  "after": {
+    "thigh_radius_m": 0.10042548959180234,
+    "calf_radius_m": 0.07229748360729436,
+    "chest_width_m": 0.4975798726081848,
+    "chest_depth_m": 0.29868176579475403
+  },
+  "percent_changes": {
+    "thigh_radius_m": 13.526847212405645,
+    "calf_radius_m": 11.61645594441303,
+    "chest_width_m": -8.045992837769678,
+    "chest_depth_m": -9.717450424577013
+  }
+}

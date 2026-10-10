@@ -1,0 +1,58 @@
+{
+  "role": "footballer",
+  "source": "Meshy 6 Lite cloth shape/textures retopologized onto the existing clean kit; preserved v3 anatomy and garment weights",
+  "protected_state_unchanged": true,
+  "before": {
+    "protected_faces": "013836270859f723e1ca94b69257ae53183ca3b742f1ea4f928bb67d932e0153",
+    "protected_face_count": 25671,
+    "garment_weights_and_uv": {
+      "Jersey": "46ed1d8f5a6ba1418ada9e05ddcb47d9a980eff01b75e16b70e8289eac2269af",
+      "Shorts": "df8efd0c0c94e8c2ec1376e2fcae8b09a3e07721a85d46927dc1aff8d36f9bba"
+    },
+    "bones": "b65fb0f40b4648601f2e352eab78ce3f8a97882fe2d981b163758e1e803a578a",
+    "actions": {
+      "Catch_v3": "69b205cd65fe9a0b9a15b998c45aec2163542be23f0c42a5ef64ce8537fc4e41",
+      "Celebrate_v3": "eea15b5b6e7608fb30b993337bf6324e9bda5d7d9ce3f4b892ee51e1e837016d",
+      "Idle_v3": "053e8cf66973414397889fa4ec6330232611c7850bd436c698e6692492440a57",
+      "Kick_v3": "e320569c25c6e61f78fa58b8c689823aba580cfe4aeb9b2f3ea52938773d41fc",
+      "SaveLeft_v3": "d914e8924076eac4bc80872eade767530f3beac63d18591bde96dd3a56f9a67a",
+      "SaveLowLeft_v3": "2ba685298f254c9e4cd8f8d6190953edd37956af41afa34ca0c23b397368ae72",
+      "SaveLowRight_v3": "616f46a6c99928c3249e87ed8fcfe05776e1732339c5c58514df5a3320018071",
+      "SaveRight_v3": "f0a156745455627a4090a5b43f56244acf87143246a8c42dabd51eb1624bb78a"
+    }
+  },
+  "after": {
+    "protected_faces": "013836270859f723e1ca94b69257ae53183ca3b742f1ea4f928bb67d932e0153",
+    "protected_face_count": 25671,
+    "garment_weights_and_uv": {
+      "Jersey": "46ed1d8f5a6ba1418ada9e05ddcb47d9a980eff01b75e16b70e8289eac2269af",
+      "Shorts": "df8efd0c0c94e8c2ec1376e2fcae8b09a3e07721a85d46927dc1aff8d36f9bba"
+    },
+    "bones": "b65fb0f40b4648601f2e352eab78ce3f8a97882fe2d981b163758e1e803a578a",
+    "actions": {
+      "Catch_v3": "69b205cd65fe9a0b9a15b998c45aec2163542be23f0c42a5ef64ce8537fc4e41",
+      "Celebrate_v3": "eea15b5b6e7608fb30b993337bf6324e9bda5d7d9ce3f4b892ee51e1e837016d",
+      "Idle_v3": "053e8cf66973414397889fa4ec6330232611c7850bd436c698e6692492440a57",
+      "Kick_v3": "e320569c25c6e61f78fa58b8c689823aba580cfe4aeb9b2f3ea52938773d41fc",
+      "SaveLeft_v3": "d914e8924076eac4bc80872eade767530f3beac63d18591bde96dd3a56f9a67a",
+      "SaveLowLeft_v3": "2ba685298f254c9e4cd8f8d6190953edd37956af41afa34ca0c23b397368ae72",
+      "SaveLowRight_v3": "616f46a6c99928c3249e87ed8fcfe05776e1732339c5c58514df5a3320018071",
+      "SaveRight_v3": "f0a156745455627a4090a5b43f56244acf87143246a8c42dabd51eb1624bb78a"
+    }
+  },
+  "garments": {
+    "Jersey": {
+      "vertices": 6128,
+      "polygons": 6126,
+      "min_z": 0.98600172996521,
+      "max_z": 1.6619504690170288
+    },
+    "Shorts": {
+      "vertices": 10782,
+      "polygons": 10784,
+      "min_z": 0.6949999928474426,
+      "max_z": 1.0750001668930054
+    }
+  },
+  "candidate": "/Users/bautiposado/Code/futbol-game/source-assets/footballer/meshy-trial-2026-10-06/integration/footballer_v4.glb"
+}

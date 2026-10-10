@@ -1,8 +1,17 @@
 node_modules/
 dist/
 .vercel/
+.netlify/
 .DS_Store
 .playwright-cli/
 output/
 .godot/
 apps/free-kick-3d/build/
+__pycache__/
+*.py[cod]
+
+# Impeccable engine cache and generated previews
+.impeccable/bin/
+.impeccable/*.png
+.impeccable/review/
+.agents/skills/impeccable/scripts/bin/

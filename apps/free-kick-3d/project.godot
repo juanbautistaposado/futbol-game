@@ -13,6 +13,10 @@ config_version=5
 config/name="Tiros Libres 3D"
 run/main_scene="res://Menu.tscn"
 config/features=PackedStringArray("4.7")
+config/icon="res://web/icon.png"
+boot_splash/image="res://web/splash.png"
+boot_splash/bg_color=Color(0.129412, 0.101961, 0.168627, 1)
+boot_splash/stretch_mode=0
 
 [display]
 
@@ -21,9 +25,11 @@ window/size/viewport_height=720
 window/size/window_width_override=1280
 window/size/window_height_override=720
 window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
 
 [rendering]
 
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
 anti_aliasing/quality/msaa_3d=2
+textures/vram_compression/import_etc2_astc=true

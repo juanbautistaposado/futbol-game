@@ -6,6 +6,8 @@ const PROFILES := [
 	{"name":"NICOLÁS", "skin":"e0b294", "hair":"70513a", "shirt":"ebebdf", "shorts":"213d6e", "beard":false}
 ]
 const DONNARUMMA := {"name":"DONNARUMMA", "skin":"c39578", "hair":"211c19", "shirt":"648740", "shorts":"283421", "beard":true}
+const MESHY_STRIKER_INDEX := 4
+const MESHY_PROFILE := {"name":"PLAYER", "skin":"c99068", "hair":"30241d", "shirt":"ebebdf", "shorts":"172438", "beard":true}
 
 static func material(color: Color, cloth := false) -> Material:
 	if cloth:

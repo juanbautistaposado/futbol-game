@@ -1,0 +1,64 @@
+{
+  "version": 4,
+  "date": "2026-10-06",
+  "revision": "meshy-retopologized-kit",
+  "builder": "apps/free-kick-3d/tools/integrate_meshy_kit.py",
+  "base": "athlete_v3_manifest.json",
+  "height_m": 1.898873,
+  "scope": "Meshy cloth shape and texture adaptation; original anatomy, clean garment topology, weights, UV0/UV2, rig and clips retained",
+  "license": {
+    "body": "CC0-1.0",
+    "meshy_clothing_derivative": "CC-BY-4.0",
+    "attribution": "Meshy AI (Meshy 6 Lite); adapted by this project",
+    "visible_credits": "Configurar \u2192 Cr\u00e9ditos"
+  },
+  "provenance": "meshy-trial-2026-10-06/manifest.json",
+  "exports": [
+    {
+      "path": "apps/free-kick-3d/assets/footballer/footballer_v4.glb",
+      "sha256": "e5e4dbe16c2b950780b46526198e2885382b0af9f73e7d62fcda2bf4b7c3a34a",
+      "bytes": 7957672,
+      "triangles": 89843,
+      "exported_vertices": 60239,
+      "bones": 53,
+      "animations": [
+        "Catch",
+        "Celebrate",
+        "Idle",
+        "Kick",
+        "SaveLeft",
+        "SaveLowLeft",
+        "SaveLowRight",
+        "SaveRight"
+      ],
+      "original_rig_and_clips_exact": true,
+      "protected_body_weights_uv_exact": true,
+      "maximum_weight_sum_error": 1.3597309589385986e-07,
+      "source_blend": "source-assets/footballer/footballer_v4.blend",
+      "source_sha256": "3a108a455bd20b446de4a07806e5e0596246a26f3b503858a80911ed015bf14f"
+    },
+    {
+      "path": "apps/free-kick-3d/assets/footballer/goalkeeper_v4.glb",
+      "sha256": "b23d8078d29763fca94ae2a5318399a3d66f92b3d78125aa4972d34d1823cece",
+      "bytes": 8231004,
+      "triangles": 96571,
+      "exported_vertices": 63641,
+      "bones": 53,
+      "animations": [
+        "Catch",
+        "Celebrate",
+        "Idle",
+        "Kick",
+        "SaveLeft",
+        "SaveLowLeft",
+        "SaveLowRight",
+        "SaveRight"
+      ],
+      "original_rig_and_clips_exact": true,
+      "protected_body_weights_uv_exact": true,
+      "maximum_weight_sum_error": 1.3597309589385986e-07,
+      "source_blend": "source-assets/footballer/goalkeeper_v4.blend",
+      "source_sha256": "eebe4b3ccc2721631658db24e320029517a181c8dbd663a07c161d072b674ed8"
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "hardware": "Apple M4",
+  "engine": "Godot 4.7.1 Compatibility",
+  "resolution": [
+    1280,
+    720
+  ],
+  "platform": "macOS native, not Web",
+  "warmup_frames": 90,
+  "sample_frames": 300,
+  "exports_sha256": {
+    "footballer_v4.glb": "e5e4dbe16c2b950780b46526198e2885382b0af9f73e7d62fcda2bf4b7c3a34a",
+    "goalkeeper_v4.glb": "b23d8078d29763fca94ae2a5318399a3d66f92b3d78125aa4972d34d1823cece"
+  },
+  "qualities": {
+    "bajo": {
+      "avg_ms": 8.39,
+      "p95_ms": 9.29,
+      "avg_fps": 119.1,
+      "draw_calls": 249
+    },
+    "medio": {
+      "avg_ms": 11.04,
+      "p95_ms": 12.22,
+      "avg_fps": 90.6,
+      "draw_calls": 989
+    },
+    "alto": {
+      "avg_ms": 11.33,
+      "p95_ms": 12.52,
+      "avg_fps": 88.3,
+      "draw_calls": 989
+    }
+  }
+}

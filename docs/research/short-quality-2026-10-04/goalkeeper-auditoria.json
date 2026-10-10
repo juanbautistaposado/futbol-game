@@ -1,0 +1,26 @@
+{
+  "other_geometry_unchanged": true,
+  "topology_unchanged": true,
+  "weights_unchanged": true,
+  "bones_unchanged": true,
+  "animation_curves_unchanged": true,
+  "palette_unchanged": true,
+  "uv0_unchanged": true,
+  "protected_uv2_unchanged": true,
+  "role": "goalkeeper",
+  "short_vertices": 10782,
+  "max_displacement_m": 0.037999986901975084,
+  "hem_z_m": 0.6949999928474426,
+  "bones": 53,
+  "animations": [
+    "Catch",
+    "Celebrate",
+    "Idle",
+    "Kick",
+    "SaveLeft",
+    "SaveLowLeft",
+    "SaveLowRight",
+    "SaveRight"
+  ],
+  "revision": "football-shorts-low-crotch-2026-10-04"
+}

@@ -1,0 +1,96 @@
+{
+  "date": "2026-10-06",
+  "status": "complete_player_added_locally",
+  "production_replacement_approved": false,
+  "generation": {
+    "reference_tool": "built-in imagegen",
+    "reference_file": "referencia-pose-a.png",
+    "reference_sha256": "3d3644c9975e0136cf062ae726bd52e63591fbfa896546f6aa99e74f43af3997",
+    "prompt_file": "image-prompt.txt",
+    "prompt_sha256": "8e571af2cf2eb564c789af591d125728775828e19576428a13179884faf8dae4",
+    "meshy_tool": "web app Image to 3D",
+    "model": "Meshy 6 Lite",
+    "geometry_credits": 10,
+    "texture_credits": 10,
+    "total_credits": 20,
+    "money_spent": 0,
+    "pose_control": false,
+    "texture_input": "same reference image",
+    "pbr_maps": true,
+    "published_to_community": false
+  },
+  "provenance": {
+    "author": "Meshy AI",
+    "source": "https://www.meshy.ai/es/workspace",
+    "license": "CC-BY-4.0",
+    "license_url": "https://creativecommons.org/licenses/by/4.0/",
+    "terms_url": "https://www.meshy.ai/terms-of-use",
+    "attribution": "Model generated with Meshy AI (Meshy 6 Lite), CC BY 4.0; reference and subsequent adaptations by this project.",
+    "reference_use": "User-provided Football Strike screenshot used only for style/proportion reference in imagegen; Meshy received the new isolated A-pose reference."
+  },
+  "raw_asset": {
+    "file": "meshy-lite-raw.glb",
+    "sha256": "0a2f7b66a9fc3edaf7175766d54647f667f38e33379b0dcb666fd21245febec3",
+    "bytes": 7765716,
+    "edited": false
+  },
+  "evaluation": {
+    "target_height_m": 1.898873,
+    "preview_only_translation_and_uniform_scale": true,
+    "engine": "Godot 4.7.1 Compatibility",
+    "views": [
+      "front",
+      "back",
+      "profile"
+    ],
+    "has_rig": false,
+    "has_skin_weights": false,
+    "has_animations": false,
+    "has_uv2": false,
+    "verdict": "Continue cleanup trial; no direct production replacement. Lower short crotch first, soften hems/folds, segment materials, simplify deformation topology, then transfer original rig weights and validate gameplay."
+  },
+  "production_assets_observed_sha256": {
+    "footballer": "e2fe8de40974ce19ca7e4793c78cd4da1dde97197706f81cf8c7a965b0e40180",
+    "goalkeeper": "f3df19c4d21d319db2b6e92effb6acb6d121861346cd9e19ed0c1a677a4d75ea"
+  },
+  "audit": "../../../docs/research/meshy-trial-2026-10-06/candidato-auditoria.json",
+  "report": "../../../docs/research/meshy-trial-2026-10-06/resultado.md",
+  "integration": {
+    "requested_by_user": true,
+    "date": "2026-10-06",
+    "mode": "cloth shape and maps retopologized onto existing kit",
+    "manifest": "../athlete_v4_manifest.json",
+    "full_body_replacement": false,
+    "published": false
+  },
+  "full_character_integration": {
+    "requested_by_user": true,
+    "date": "2026-10-06",
+    "mode": "complete source mesh adapted to existing rig as additional selectable striker",
+    "striker_index": 4,
+    "runtime": "apps/free-kick-3d/assets/footballer/meshy_player.glb",
+    "source_blend": "source-assets/footballer/meshy_player.blend",
+    "audit": "docs/research/meshy-trial-2026-10-06/full-player-rig.json",
+    "reference": "source-assets/footballer/references/meshy-player-user-reference.png",
+    "replaces_existing_players": false,
+    "additional_credits": 0,
+    "money_spent": 0,
+    "published": false,
+    "arm_gesture_revision": {
+      "date": "2026-10-08",
+      "source": "apps/free-kick-3d/tools/pose_striker_arms.py",
+      "modified_clips": [
+        "Idle",
+        "Kick"
+      ],
+      "modified_tracks": "UpperArm/Forearm/Hand rotations only",
+      "relaxed_finger_rest_shape": true,
+      "rig_and_other_channels_exact": true,
+      "report": "docs/research/kick-arms-2026-10-08/aplicado.md",
+      "additional_credits": 0,
+      "published": false
+    },
+    "original_rig_unchanged": true,
+    "animation_edit_scope": "Six arm/hand rotation tracks in Idle/Kick; other channels exact"
+  }
+}

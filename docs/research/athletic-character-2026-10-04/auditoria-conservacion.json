@@ -1,0 +1,38 @@
+{
+  "other_geometry_unchanged": true,
+  "topology_unchanged": true,
+  "weights_unchanged": true,
+  "bones_unchanged": true,
+  "animation_curves_unchanged": true,
+  "palette_unchanged": true,
+  "uv0_unchanged": true,
+  "protected_uv2_unchanged": true,
+  "height_unchanged": true,
+  "bones": 53,
+  "animations": [
+    "Catch",
+    "Celebrate",
+    "Idle",
+    "Kick",
+    "SaveLeft",
+    "SaveLowLeft",
+    "SaveLowRight",
+    "SaveRight"
+  ],
+  "affected_vertices": 11635,
+  "max_displacement_m": 0.03723774235269792,
+  "before": {
+    "waist_width_m": 0.39247769117355347,
+    "chest_width_m": 0.49932023882865906
+  },
+  "after": {
+    "waist_width_m": 0.39903222024440765,
+    "chest_width_m": 0.5411182045936584
+  },
+  "peak_radius_changes": {
+    "upperarm": 0.26,
+    "forearm": 0.14,
+    "thigh": 0.13,
+    "calf": 0.12
+  }
+}

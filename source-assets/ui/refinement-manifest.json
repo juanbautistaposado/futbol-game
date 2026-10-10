@@ -1,0 +1,54 @@
+{
+  "date": "2026-10-04",
+  "tool": "built-in image_gen",
+  "sources": [
+    "configure-generated.png",
+    "icon-generated.png"
+  ],
+  "prompts": "refinement-prompts.json",
+  "splash_source": "apps/free-kick-3d/ui/brand/title-raster.png",
+  "normalization": "normalize_ui_raster.py for connected alpha trim; Pillow Lanczos for icon sizes/splash, source artwork unchanged",
+  "validation": "native 960x540,1280x720,1920x1080; browser preloader and app; menu_flow passed",
+  "assets": [
+    {
+      "path": "apps/free-kick-3d/ui/brand/configure-raster.png",
+      "dimensions": [
+        2122,
+        641
+      ],
+      "mode": "RGBA",
+      "bytes": 903781,
+      "sha256": "9d586903b9a8951eb038f06ae5150b9ea3630013ed9098043132b461a795f8ec"
+    },
+    {
+      "path": "apps/free-kick-3d/web/icon.png",
+      "dimensions": [
+        512,
+        512
+      ],
+      "mode": "RGB",
+      "bytes": 215150,
+      "sha256": "a6d4dfad4e49a8066f41e25ff187cbcf62ec4c8b32ead4e8ba8ddc87b07f7e2c"
+    },
+    {
+      "path": "apps/free-kick-3d/web/splash.png",
+      "dimensions": [
+        720,
+        401
+      ],
+      "mode": "RGBA",
+      "bytes": 337764,
+      "sha256": "e319de220b4251ec7c92e8eda191be0a1961d446d42ebebe469d2523d3888fd3"
+    },
+    {
+      "path": "apps/free-kick-3d/web/favicon.ico",
+      "dimensions": [
+        64,
+        64
+      ],
+      "mode": "RGB",
+      "bytes": 11665,
+      "sha256": "d8ad899b08944347dae9ff67cd1a794e440566bcea0ef0c58a7f1454ef65eaee"
+    }
+  ]
+}

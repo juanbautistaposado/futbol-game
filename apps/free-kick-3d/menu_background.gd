@@ -1,6 +1,7 @@
 extends Node3D
 var keeper_preview: Node3D
 var player: Node3D
+var preview_camera: Camera3D
 
 func _ready() -> void:
 	var environment := WorldEnvironment.new()
@@ -57,7 +58,8 @@ func _ready() -> void:
 	ball.material_override = leather
 	ball.position = Vector3(2.1,0.22,-39.6)
 	add_child(ball)
-	var camera := Camera3D.new()
+	preview_camera = Camera3D.new()
+	var camera := preview_camera
 	camera.position = Vector3(0,2.2,-34.5)
 	camera.fov = 48
 	add_child(camera)
@@ -84,3 +86,7 @@ func show_keeper(config: ConfigFile) -> void:
 	keeper_preview.position = Vector3(1.4,1.035,-40)
 	keeper_preview.rotation.y = PI-0.3
 	keeper_preview.show()
+
+func frame_home_poster(enabled: bool) -> void:
+	preview_camera.fov = 40 if enabled else 48
+	preview_camera.look_at(Vector3(0.2 if enabled else -0.1, 1.0, -40))

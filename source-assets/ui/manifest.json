@@ -1,0 +1,52 @@
+{
+  "generated_on": "2026-10-04",
+  "tool": "built-in image_gen",
+  "reference": "docs/design/ui-concepts-2026-10-03/03-arcade.png",
+  "originals": "source-assets/ui/",
+  "prompts": "source-assets/ui/prompts.json",
+  "normalization": "apps/free-kick-3d/tools/normalize_ui_raster.py",
+  "import": {
+    "compression": "lossless",
+    "fix_alpha_border": true,
+    "mipmaps": true,
+    "sampling": "LINEAR_WITH_MIPMAPS"
+  },
+  "status": "Integrated and visually reviewed natively at 960x540,1280x720,1920x1080,1600x720,1280x960; Web export smoke-tested at1280x720; pending user aesthetic review",
+  "assets": [
+    {
+      "path": "apps/free-kick-3d/ui/brand/title-raster.png",
+      "dimensions": [
+        1512,
+        842
+      ],
+      "mode": "RGBA",
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "transparent_pixels": 222957,
+      "opaque_pixels": 1013639,
+      "bytes": 1207352,
+      "sha256": "3cebe75380902aa44a90260e4252ae477a70014e8416b0aad898c791536e4424",
+      "rgba_memory_with_mipmaps_bytes": 6789888
+    },
+    {
+      "path": "apps/free-kick-3d/ui/brand/play-raster.png",
+      "dimensions": [
+        2132,
+        573
+      ],
+      "mode": "RGBA",
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "transparent_pixels": 338831,
+      "opaque_pixels": 853183,
+      "bytes": 1035710,
+      "sha256": "38ae2cfb42ae0e08e7fc6e6753313ea6b5f9658ffb31c18725141259e21d85d1",
+      "rgba_memory_with_mipmaps_bytes": 6515392
+    }
+  ],
+  "normalization_notes": "Trim disconnected alpha, normalize near-opaque generated interiors (253\u2013254) to 255 preserving fractional edge coverage, 4px gutter."
+}

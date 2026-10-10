@@ -10,6 +10,7 @@ func run() -> void:
 	game.shot_goal = -1
 	game.ball.position = Vector3(1,1.2,-52.75)
 	game.resolve_shot(true,"¡Gol!")
+	assert(game.match_audio.result_player.stream == game.match_audio.GOAL_SIGNAL)
 	await create_timer(0.24).timeout
 	assert(game.get_node("Stadium").net_materials[-1].get_shader_parameter("age") > 0)
 	game.start_attack()
@@ -24,6 +25,7 @@ func run() -> void:
 			seed(candidate)
 			break
 	game.show_save(game.away_keeper)
+	assert(game.match_audio.result_player.stream == game.match_audio.MISS_SIGNAL)
 	assert(game.holding_keeper == game.away_keeper and game.ball.freeze)
 
 	game.start_attack()

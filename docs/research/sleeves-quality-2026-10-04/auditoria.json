@@ -1,0 +1,24 @@
+{
+  "other_geometry_unchanged": true,
+  "topology_unchanged": true,
+  "weights_unchanged": true,
+  "bones_unchanged": true,
+  "animation_curves_unchanged": true,
+  "palette_unchanged": true,
+  "uv0_unchanged": true,
+  "protected_uv2_unchanged": true,
+  "affected_vertices": 1344,
+  "max_displacement_m": 0.008861983673042586,
+  "boundary_vertices_pinned": 0,
+  "bones": 53,
+  "animations": [
+    "Catch",
+    "Celebrate",
+    "Idle",
+    "Kick",
+    "SaveLeft",
+    "SaveLowLeft",
+    "SaveLowRight",
+    "SaveRight"
+  ]
+}

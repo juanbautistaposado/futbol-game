@@ -1,0 +1,37 @@
+{
+  "date": "2026-10-06",
+  "device": "Apple M4",
+  "engine": "Godot 4.7.1 Compatibility / OpenGL 4.1 Metal",
+  "resolution": [
+    1280,
+    720
+  ],
+  "striker_index": 4,
+  "scene": "Main.tscn",
+  "vsync": false,
+  "frames_per_profile": 300,
+  "results": [
+    {
+      "quality": "bajo",
+      "avg_ms": 7.92,
+      "p95_ms": 11.37,
+      "avg_fps": 126.2,
+      "draw_calls": 240
+    },
+    {
+      "quality": "medio",
+      "avg_ms": 9.81,
+      "p95_ms": 12.08,
+      "avg_fps": 101.9,
+      "draw_calls": 962
+    },
+    {
+      "quality": "alto",
+      "avg_ms": 10.0,
+      "p95_ms": 12.63,
+      "avg_fps": 100.0,
+      "draw_calls": 962
+    }
+  ],
+  "limits": "Native macOS only; does not establish web or phone performance."
+}

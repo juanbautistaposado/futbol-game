@@ -32,28 +32,22 @@ func run() -> void:
 		striker_materials.append(striker_body.mesh.surface_get_material(i).resource_name)
 	for i in range(keeper_body.mesh.get_surface_count()):
 		keeper_materials.append(keeper_body.mesh.surface_get_material(i).resource_name)
-	assert("JerseyAccent" in striker_materials and "SkinShade" in striker_materials)
+	assert("MeshyPlayer" in striker_materials and "Jersey" in striker_materials)
 	assert("GoalkeeperGloves" not in striker_materials and "GoalkeeperGloves" in keeper_materials)
 	assert(game.kicker.footballer_visual.get_node("FootballerRig/Skeleton3D").get_bone_count() == game.home_keeper.skeleton.get_bone_count())
-	assert(striker_body.get_surface_override_material(0).get_shader_parameter("tint") == Color("aa2233"))
-	assert(keeper_body.get_surface_override_material(0).get_shader_parameter("tint") == Color("7733aa"))
-	var accent_found := false
-	var skin_detail_found := false
-	for i in range(keeper_body.mesh.get_surface_count()):
-		var source := keeper_body.mesh.surface_get_material(i)
-		if source.resource_name == "JerseyAccent":
-			accent_found = true
-			assert(keeper_body.get_surface_override_material(i).get_shader_parameter("tint") == Color("7733aa").lerp(Color.WHITE,0.32))
-		if source.resource_name == "SkinShade":
-			skin_detail_found = true
-			var detail := keeper_body.get_surface_override_material(i) as StandardMaterial3D
-			assert(detail != null and detail.albedo_color == Color(str(menu.profile.get_value("custom_keeper","skin","bb8868"))).darkened(0.22))
-	assert(accent_found and skin_detail_found)
-	var shirt_text: Array[String] = []
-	for child in game.home_keeper.visual.get_children():
-		if child is Label3D: shirt_text.append(child.text)
-	assert("ARQUERO" in shirt_text and "17" in shirt_text)
-	assert(game.kicker.footballer_visual.get_node("FootballerRig/Skeleton3D/Beard").visible)
+	for sample in [[striker_body, Color("aa2233")], [keeper_body, Color("7733aa")]]:
+		var body: MeshInstance3D = sample[0]
+		for i in body.mesh.get_surface_count():
+			if body.mesh.surface_get_material(i).resource_name == "Jersey":
+				var fabric := body.get_surface_override_material(i) as ShaderMaterial
+				assert(fabric.get_shader_parameter("tint") == sample[1])
+				assert(fabric.get_shader_parameter("albedo_map") != null)
+				assert(fabric.get_shader_parameter("normal_map") != null)
+				assert(fabric.get_shader_parameter("lettering_enabled"))
+	var print_view: SubViewport = game.home_keeper.goalkeeper_visual.get_node("JerseyPrint")
+	assert(print_view.get_node("Name").text == "ARQUERO")
+	assert(print_view.get_node("Number").text == "17")
+	assert(game.kicker.visual_model == load("res://footballer_model.gd").MESHY_STRIKER_INDEX)
 	assert(game.kicker.footballer_animation.has_animation("Kick"))
 	assert(game.home_keeper.goalkeeper_animation.has_animation("SaveLeft"))
 	DirAccess.remove_absolute(menu.save_path)

@@ -25,6 +25,15 @@ npm run dev
 
 GitHub Pages ya compila `apps/mvp-phaser` desde el workflow del repositorio. Para Vercel, configurá `apps/mvp-phaser` como **Root Directory** del proyecto; allí están `package.json` y `vercel.json`.
 
+## Publicar el 3D en web
+
+Exportá la versión Godot con `bash scripts/export-web.sh`. Genera el sitio estático
+en `apps/free-kick-3d/build/web/`, listo para una carga manual a Netlify.
+La [guía de publicación](./docs/publicar-web-netlify.md) explica cómo probarlo,
+vincular la cuenta y subir primero un borrador. Requiere Godot y sus plantillas de
+exportación de la misma versión. El build se genera localmente; Netlify no tiene
+builds automáticos por Git configurados para el 3D.
+
 ## Documentación compartida
 
 - [Glosario del dominio](./CONTEXT.md)

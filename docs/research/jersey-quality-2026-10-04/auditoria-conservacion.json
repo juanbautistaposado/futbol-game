@@ -1,0 +1,17 @@
+{
+  "weights_unchanged": true,
+  "dorsal_uv_unchanged": true,
+  "protected_parts_unchanged": true,
+  "rig_unchanged": true,
+  "animations_unchanged": true,
+  "palette_unchanged": true,
+  "height_unchanged": true,
+  "bone_count": 53,
+  "clip_count": 8,
+  "valid_meshes": {
+    "Beard": true,
+    "FootballerBody": true
+  },
+  "baseline": "fuente anterior a la mejora de camiseta del 4 de octubre; incluye short y medias",
+  "goalkeeper_export_unchanged": true
+}

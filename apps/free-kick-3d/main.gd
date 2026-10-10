@@ -41,6 +41,7 @@ var home_keeper: Keeper
 var camera: Camera3D
 var status_label: Label
 var score_label: Label
+var score_detail: Label
 var hint_label: Label
 var aim_label: Label
 var aim_marker: MeshInstance3D
@@ -361,29 +362,78 @@ func create_ball() -> RigidBody3D:
 func create_interface() -> void:
 	var canvas := CanvasLayer.new()
 	add_child(canvas)
-	var panel := ColorRect.new()
+	var visual = preload("res://ui/visual_theme.gd")
+	var ui := Control.new()
+	ui.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	ui.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	ui.theme = visual.create()
+	canvas.add_child(ui)
+	var panel := preload("res://ui/poster_panel.gd").new()
 	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	panel.color = Color(0.02, 0.08, 0.13, 0.82)
-	panel.position = Vector2(20, 18)
-	panel.size = Vector2(940, 148)
-	canvas.add_child(panel)
+	panel.position = Vector2(24, 24)
+	ui.add_child(panel)
+	var stack := VBoxContainer.new()
+	stack.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	stack.add_theme_constant_override("separation", 4)
+	panel.add_child(stack)
+	score_label = preload("res://ui/scoreboard.gd").new()
+	score_label.custom_minimum_size.y = 34
+	score_label.add_theme_font_override("font", visual.EMPHASIS)
+	score_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	score_detail = make_label(Vector2.ZERO, 16, visual.MUTED)
+	status_label = make_label(Vector2.ZERO, 20, visual.INK)
+	status_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	status_label.add_theme_font_override("font", visual.DISPLAY)
 
-	score_label = make_label(Vector2(36, 28), 30, Color("f8fafc"))
-	status_label = make_label(Vector2(36, 68), 22, Color("facc15"))
-	aim_label = make_label(Vector2(36, 102), 17, Color("dbeafe"))
-	hint_label = make_label(Vector2(20, 660), 18, Color("f8fafc"))
-	hint_label.size = Vector2(1200, 44)
-	canvas.add_child(score_label)
-	canvas.add_child(status_label)
-	canvas.add_child(aim_label)
-	canvas.add_child(hint_label)
+	aim_label = make_label(Vector2.ZERO, 16, visual.MUTED)
+	for item in [score_label]:
+		item.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		stack.add_child(item)
+	var turn_plate := preload("res://ui/poster_panel.gd").new()
+	turn_plate.fill = visual.BLUE
+	turn_plate.position = Vector2(24, 84)
+	turn_plate.size = Vector2(240, 42)
+	ui.add_child(turn_plate)
+	turn_plate.add_child(status_label)
+	ui.add_child(score_detail)
+	ui.add_child(aim_label)
+	score_detail.hide()
+	aim_label.hide()
+	var layout_score := func() -> void:
+		panel.size = Vector2(minf(660.0 if player_count > 1 else 500.0, ui.size.x - 232.0), 54)
+	ui.resized.connect(layout_score)
+	layout_score.call()
+	hint_label = make_label(Vector2.ZERO, 18, visual.BASE)
+	hint_label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	ui.add_child(hint_label)
+	hint_label.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
+	hint_label.offset_left = 24
+	hint_label.anchor_right = 0.0
+	hint_label.offset_right = 680
+	hint_label.offset_top = -64
+	hint_label.offset_bottom = -24
+	hint_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	hint_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	hint_label.add_theme_font_override("font", visual.EMPHASIS)
+	var help_style := StyleBoxTexture.new()
+	help_style.texture = preload("res://ui/plates/help.svg")
+	help_style.texture_margin_left = 0
+	help_style.texture_margin_right = 0
+	help_style.texture_margin_top = 0
+	help_style.texture_margin_bottom = 0
+	help_style.content_margin_left = 28
+	help_style.content_margin_right = 22
+	help_style.content_margin_top = 8
+	help_style.content_margin_bottom = 8
+	hint_label.add_theme_stylebox_override("normal", help_style)
+
 	shot_meter = ShotMeter.new()
 	canvas.add_child(shot_meter)
 	shot_meter.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
 	shot_meter.offset_left = -480
 	shot_meter.offset_right = -20
-	shot_meter.offset_top = -190
-	shot_meter.offset_bottom = -76
+	shot_meter.offset_top = -124
+	shot_meter.offset_bottom = -24
 	defense_target = preload("res://defense_target.gd").new()
 	canvas.add_child(defense_target)
 	defense_target.hide()
@@ -404,6 +454,7 @@ func make_label(location: Vector2, font_size: int, color: Color) -> Label:
 	var label := Label.new()
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	label.position = location
+	label.add_theme_font_override("font", preload("res://ui/visual_theme.gd").DISPLAY if font_size >= 26 else preload("res://ui/visual_theme.gd").BODY)
 	label.add_theme_font_size_override("font_size", font_size)
 	label.add_theme_color_override("font_color", color)
 	return label
@@ -411,6 +462,8 @@ func make_label(location: Vector2, font_size: int, color: Color) -> Label:
 func start_attack() -> void:
 	match_overlay.result_label.hide()
 	phase = Phase.ATTACK
+	hint_label.offset_right = 620
+	hint_label.offset_top = -64
 	is_charging = false
 	shot_power = 0.0
 	shot_meter.reset()
@@ -426,13 +479,15 @@ func start_attack() -> void:
 	kicker.apply_identity(int(identity.get_value("appearance","striker",0)),player_name,int(identity.get_value("appearance","number",10)),preload("res://footballer_model.gd").custom_profile(identity))
 	kicker.reset_pose(ball.position, -1)
 	look_from_kicker()
-	status_label.text = "%s · tiro %s" % [current_player_label(), turn_label()]
-	hint_label.text = "Apuntá con el mouse · Mantené clic o ESPACIO · Soltá cuando la barra pase por el centro"
+	status_label.text = ("TIRO · MS %s" % (turn - shot_limit) if sudden_death else "TIRO %s" % turn_label()) if player_count == 1 else "J%s · TIRO %s" % [active_player + 1, turn_label()]
+	hint_label.text = "Apuntá · Mantené clic · Soltá en el centro"
 	update_score()
 
 func start_defense() -> void:
 	match_overlay.result_label.hide()
 	phase = Phase.DEFEND
+	hint_label.offset_right = get_viewport().get_visible_rect().size.x - 24
+	hint_label.offset_top = -80
 	shot_meter.hide()
 	away_keeper.hide()
 	away_keeper.reset_pose()
@@ -450,7 +505,7 @@ func start_defense() -> void:
 	kicker.reset_pose(ball.position, 1)
 	look_from_keeper()
 	refresh_defense_target()
-	status_label.text = "Turno %s: atajás" % turn_label()
+	status_label.text = "ATAJÁS · MS %s" % (turn - shot_limit) if sudden_death else "ATAJÁS %s" % turn_label()
 	hint_label.text = "Esperá el remate · Mouse: apuntá y hacé clic · Táctil: arrastrá y soltá · ← / ESPACIO / →, W alta / S baja"
 	update_score()
 
@@ -685,13 +740,13 @@ func resolve_shot(scored: bool, message: String, keep_ball_moving := false) -> v
 			local_scores[active_player] += 1
 		else:
 			rival_goals += 1
+	match_audio.play_result(scored)
 	if scored:
-		match_audio.play_goal_cheer()
 		show_net_goal()
 	status_label.text = message
 	var headline := "¡GOL!" if scored else "¡ATAJADA!" if message == "¡Atajada!" else "¡FUERA!"
 	if hit_woodwork and message != "¡Atajada!": headline = "¡PALO Y GOL!" if scored else "¡PALO Y FUERA!"
-	match_overlay.show_result(headline,Color("86efac") if scored else Color("facc15"))
+	match_overlay.show_result(headline,preload("res://ui/visual_theme.gd").SUCCESS if scored else preload("res://ui/visual_theme.gd").ENERGY)
 	update_score()
 	phase = Phase.RESOLVING
 	defense_target.hide()
@@ -756,7 +811,7 @@ func finish_match() -> void:
 				winners.append("Jugador %s" % (i + 1))
 		status_label.text = "¡Ganó %s!" % winners[0] if winners.size() == 1 else "Empate: %s" % " / ".join(winners)
 		celebrating = winners.size() == 1
-	match_overlay.show_result(status_label.text,Color("facc15"),true)
+	match_overlay.show_result(status_label.text,preload("res://ui/visual_theme.gd").ENERGY,true)
 	if celebrating:
 		show_victory_celebration()
 	hint_label.text = "Volviendo al inicio… · ESPACIO para continuar"
@@ -816,10 +871,18 @@ func update_score() -> void:
 		var scores: PackedStringArray = []
 		for i in range(player_count):
 			scores.append("J%s: %s" % [i + 1, local_scores[i]])
-		score_label.text = "%s · %s tiros c/u" % ["   |   ".join(scores), shot_limit]
+		var entries: Array = []
+		for i in range(player_count): entries.append(["J%s" % (i + 1), local_scores[i]])
+		score_label.set("entries", entries)
+		score_label.queue_redraw()
+		score_label.text = "   |   ".join(scores)
+		score_detail.text = "%s tiros por jugador" % shot_limit
 		return
 	var suffix := " · muerte súbita" if sudden_death else ""
-	score_label.text = "%s %s — %s Donnarumma%s · récord %s" % [player_name, player_goals, rival_goals, suffix, best_score]
+	score_label.set("entries", [[player_name, player_goals], ["Arquero", rival_goals]])
+	score_label.queue_redraw()
+	score_label.text = "%s  %s — %s  Arquero" % [player_name, player_goals, rival_goals]
+	score_detail.text = "Mejor marca: %s goles%s" % [best_score, suffix]
 
 func update_aim_label() -> void:
 	if phase == Phase.ATTACK and not ball_in_flight:

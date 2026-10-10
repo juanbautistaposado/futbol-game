@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import argparse
 import math
 import random
 import struct
@@ -59,70 +60,65 @@ def net(t: float, i: int) -> float:
     return mesh + 0.08 * math.sin(2 * math.pi * 120 * t) * math.exp(-18 * t)
 
 
-def crowd(t: float, i: int) -> float:
-    # Soft, nonverbal crowd murmur; a deterministic loop with a long fade at its seam.
-    seam = min(1.0, t / 0.3, (6.0 - t) / 0.3)
-    voices = sum(
-        math.sin(2 * math.pi * (frequency * t + phase))
-        for frequency, phase in [(87, 0.13), (113, 0.67), (159, 0.31), (197, 0.8)]
+def result_note(t: float, start: float, frequency: float, duration: float) -> float:
+    """A plucked, rounded tone: each harmonic decays independently."""
+    age = t - start
+    if age < 0 or age >= duration:
+        return 0.0
+    envelope = min(1.0, age / 0.004) * min(1.0, (duration - age) / 0.065)
+    phase = 2 * math.pi * frequency * age
+    body = math.sin(phase) * math.exp(-7.5 * age)
+    wood = 0.28 * math.sin(phase * 2) * math.exp(-24 * age)
+    sparkle = 0.13 * math.sin(phase * 4) * math.exp(-38 * age)
+    # Quiet detuned partial adds body without a sustained electronic buzz.
+    warmth = 0.08 * math.sin(phase * 1.003) * math.exp(-12 * age)
+    return (body + wood + sparkle + warmth) * envelope * 0.29
+
+
+def goal_dry(t: float) -> float:
+    # A quick G-major flourish with a low foundation and a brighter final note.
+    return (
+        0.36 * result_note(t, 0.0, 196.0, 0.28)
+        + 0.70 * result_note(t, 0.0, 392.0, 0.26)
+        + 0.80 * result_note(t, 0.065, 493.88, 0.28)
+        + result_note(t, 0.13, 587.33, 0.38)
+        + 0.26 * result_note(t, 0.15, 783.99, 0.30)
     )
-    texture = noise() * 0.06
-    return seam * (voices * 0.021 + texture) * (0.85 + 0.13 * math.sin(2 * math.pi * 0.37 * t))
 
 
-def make_goal_cheer():
-    """A short crowd roar and scattered claps, without the old musical tones."""
-    rng = random.Random(20261001)
-    voices = [
-        (rng.uniform(95, 245), rng.uniform(-0.06, 0.24), rng.uniform(0.95, 1.55), rng.random())
-        for _ in range(18)
-    ]
-    clap_times = sorted(rng.uniform(0.12, 1.48) for _ in range(74))
-    clap_index = 0
-    clap_body = 0.0
-    low = 0.0
-    high = 0.0
+def goal(t: float, i: int) -> float:
+    # Short early reflections give the flourish space, without a long tail.
+    return (goal_dry(t) + 0.16 * goal_dry(t - 0.029)
+            + 0.09 * goal_dry(t - 0.053) + 0.04 * goal_dry(t - 0.070))
 
-    def cheer(t: float, i: int) -> float:
-        nonlocal clap_index, clap_body, low, high
-        while clap_index < len(clap_times) and clap_times[clap_index] <= t:
-            clap_body += rng.uniform(0.20, 0.50)
-            clap_index += 1
-        clap_body *= 0.9974
 
-        white = rng.random() * 2.0 - 1.0
-        low += 0.018 * (white - low)
-        high += 0.23 * (white - high)
-        mid_noise = high - low
-        swell = min(1.0, t / 0.16) * min(1.0, (1.85 - t) / 0.42)
+def miss_dry(t: float) -> float:
+    # A muted descending knock: brief and softer than the goal flourish.
+    age = t - 0.045
+    drop = 0.0
+    if 0 <= age < 0.28:
+        phase = 2 * math.pi * (230 * age - 95 * age * age)
+        envelope = min(1.0, age / 0.005) * min(1.0, (0.28 - age) / 0.055)
+        drop = 0.23 * math.sin(phase) * math.exp(-13 * age) * envelope
+    return 0.60 * result_note(t, 0.0, 349.23, 0.15) + drop
 
-        # Slightly different pitches, timing and lengths blur the voices into a crowd.
-        chant = 0.0
-        for frequency, start, duration, phase in voices:
-            age = t - start
-            if age < 0 or age > duration:
-                continue
-            envelope = min(1.0, age / 0.10, (duration - age) / 0.25)
-            wobble = 1.0 + 0.018 * math.sin(2 * math.pi * (2.4 + phase) * age)
-            cycle = 2 * math.pi * (frequency * wobble * age + phase)
-            chant += envelope * (math.sin(cycle) + 0.28 * math.sin(cycle * 2.0))
-        chant *= 0.017
 
-        applause = clap_body * (white - low) * 0.19
-        roar = mid_noise * 0.32
-        return swell * (chant + roar + applause)
-
-    return cheer
+def miss(t: float, i: int) -> float:
+    return miss_dry(t) + 0.10 * miss_dry(t - 0.035) + 0.05 * miss_dry(t - 0.055)
 
 
 if __name__ == "__main__":
-    for name, seconds, generator in [
-        ("kick", 0.24, impact),
-        ("save", 0.32, glove),
-        ("post", 0.75, woodwork),
-        ("net", 0.58, net),
-        ("crowd", 6.0, crowd),
-        ("cheer", 1.85, make_goal_cheer()),
-    ]:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--results-only", action="store_true", help="Generate only goal/miss cues")
+    args = parser.parse_args()
+    sounds = [("goal", 0.58, goal), ("miss", 0.38, miss)]
+    if not args.results_only:
+        sounds = [
+            ("kick", 0.24, impact),
+            ("save", 0.32, glove),
+            ("post", 0.75, woodwork),
+            ("net", 0.58, net),
+        ] + sounds
+    for name, seconds, generator in sounds:
         save(name, seconds, generator)
         print(OUT / f"{name}.wav")

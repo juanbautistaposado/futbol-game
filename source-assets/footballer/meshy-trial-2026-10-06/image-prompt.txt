@@ -1,0 +1,13 @@
+Tool: built-in imagegen
+Input image role: STYLE AND PROPORTION REFERENCE ONLY
+Input: user's Football Strike screenshot, codex-clipboard-d308a8a4-ed90-4ba8-9856-2695a80b35d6.png
+Output: referencia-pose-a.png
+
+Exact submitted prompt:
+
+Use case: stylized-concept. Create one neutral 3D character reference image for an Image-to-3D trial, inspired by the provided football game's athletic silhouette and cloth rendering. Input image is STYLE AND PROPORTION REFERENCE ONLY; do not reproduce its UI or exact character identity. Subject: ONE adult male association-football outfield player, full body centered, frontal orthographic camera, head to boot soles fully visible with margin. Symmetric relaxed A-pose: straight arms angled approximately 35 degrees away from torso, elbows straight, hands open and relaxed at sides with clearly separate fingers; palms facing camera. Feet parallel and shoulder width apart, knees straight, standing upright, no action. Stylized realistic mobile-game athlete, around 7.5 heads tall, moderate flat chest without exaggerated pectorals, natural shoulder width, solid thighs and calves, balanced athletic physique, natural neutral face, medium tan skin, short textured dark hair, restrained short facial stubble. Uniform: warm off-white loose football jersey with dark navy narrow crew-neck trim fully touching neck, smooth seamless shoulder-to-sleeve silhouette, slightly roomy short sleeves ending at middle of biceps, no rolled or folded-in cuffs. Jersey has natural broad soft fabric folds on abdomen and waist, smooth upper chest, rests over waistband. Dark navy nearly black football shorts, one continuous waistband, low natural crotch with only a small gap between leg openings, two relaxed straight leg tubes reaching mid thigh, subtle folds, no deep arch, thin white side piping. Light off-white football socks ending below knees, charcoal black low-cut football boots. Cloth should look thin, matte, breathable sports polyester, no rigid armor appearance, no inflated chest or sleeves. Plain uniform WITHOUT logos or text; number/name will be applied later in engine. Background solid light neutral gray, no ground plane, no cast shadow, no environment, no ball, no props. Soft even neutral lighting with no strong shadows or baked highlights. Clean high quality game character render. Exactly one FRONT view, not a turnaround grid, no second figure, no goalkeeper, no crossed arms, no screenshot UI, no watermark.
+
+Meshy input:
+Image to 3D using referencia-pose-a.png; no text prompt.
+Meshy 6 Lite, high detail, Pose disabled, CC BY 4.0.
+Texture: Image Input using the same reference; Meshy 6 Lite; Generate PBR maps enabled.

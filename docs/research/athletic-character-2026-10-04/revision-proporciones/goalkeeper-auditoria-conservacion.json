@@ -1,0 +1,41 @@
+{
+  "other_geometry_unchanged": true,
+  "topology_unchanged": true,
+  "weights_unchanged": true,
+  "bones_unchanged": true,
+  "animation_curves_unchanged": true,
+  "palette_unchanged": true,
+  "uv0_unchanged": true,
+  "protected_uv2_unchanged": true,
+  "role": "goalkeeper",
+  "height_unchanged": true,
+  "bones": 53,
+  "animations": [
+    "Catch",
+    "Celebrate",
+    "Idle",
+    "Kick",
+    "SaveLeft",
+    "SaveLowLeft",
+    "SaveLowRight",
+    "SaveRight"
+  ],
+  "affected_vertices": 11625,
+  "max_displacement_m": 0.03676371623010745,
+  "short_clearance_vertices": 1525,
+  "before": {
+    "waist_width_m": 0.39247769117355347,
+    "chest_width_m": 0.49932023882865906
+  },
+  "after": {
+    "waist_width_m": 0.3937954902648926,
+    "chest_width_m": 0.4975798726081848
+  },
+  "peak_radius_changes": {
+    "upperarm": 0.22,
+    "forearm": 0.14,
+    "thigh": 0.3,
+    "calf": 0.25,
+    "shorts": 0.08
+  }
+}

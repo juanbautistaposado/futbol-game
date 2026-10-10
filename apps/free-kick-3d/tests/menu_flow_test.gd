@@ -8,6 +8,7 @@ func run() -> void:
 	await scene_changed
 	var menu = current_scene
 	assert(menu.name == "MainMenu")
+	menu.save_path = "/tmp/futbol-impeccable-menu-flow.cfg"
 	assert(menu.play_button.has_focus())
 	menu.show_settings()
 	assert(menu.difficulty_buttons.size() == 3)
@@ -18,6 +19,18 @@ func run() -> void:
 		if child is LineEdit:
 			has_name_field = true
 	assert(has_name_field)
+	menu.show_custom_keeper()
+	await process_frame
+	assert(menu.page.is_ancestor_of(root.gui_get_focus_owner()))
+	var back := InputEventKey.new()
+	back.keycode = KEY_ESCAPE
+	back.pressed = true
+	menu._unhandled_input(back)
+	await process_frame
+	assert(menu.page.is_ancestor_of(root.gui_get_focus_owner()))
+	assert(root.gui_get_focus_owner().text == "PERSONALIZADO")
+	menu._unhandled_input(back)
+	assert(menu.difficulty_buttons.size() == 3)
 	menu.show_menu()
 	menu.play_button.pressed.emit()
 	assert(is_instance_valid(menu.start_button))
@@ -49,5 +62,6 @@ func run() -> void:
 	await scene_changed
 	assert(current_scene.name == "MainMenu")
 	assert(current_scene.play_button.has_focus())
-	print("PASS: menú, aspecto, jugar, resultado central, pausa real, continuar y salir")
+	DirAccess.remove_absolute("/tmp/futbol-impeccable-menu-flow.cfg")
+	print("PASS: foco en personalizado, Esc por niveles, menú, aspecto, jugar, resultado central, pausa real, continuar y salir")
 	quit()

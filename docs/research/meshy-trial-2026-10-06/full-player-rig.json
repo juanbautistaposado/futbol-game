@@ -1,0 +1,93 @@
+{
+  "source": "source-assets/footballer/meshy-trial-2026-10-06/meshy-lite-raw.glb",
+  "source_sha256": "0a2f7b66a9fc3edaf7175766d54647f667f38e33379b0dcb666fd21245febec3",
+  "runtime": "apps/free-kick-3d/assets/footballer/meshy_player.glb",
+  "runtime_sha256": "94b83f0392acbeee3fdc8bf8c33ab019fcd901e4c6ac48da4ea9643b7ebc6691",
+  "source_blend": "source-assets/footballer/meshy_player.blend",
+  "scope": "Complete Meshy geometry and original PBR maps; relaxed finger rest shape and football arm rotation tracks in Idle/Kick",
+  "vertices": 50944,
+  "polygons": 101904,
+  "bones": 53,
+  "maximum_weight_sum_error": 1.2163471219128752e-07,
+  "license": "CC-BY-4.0",
+  "author": "Meshy AI",
+  "rig_changes": false,
+  "arm_animation_changes": [
+    {
+      "clip": "Idle",
+      "rotation_bones": [
+        "UpperArm.R",
+        "Forearm.R",
+        "Hand.R",
+        "UpperArm.L",
+        "Forearm.L",
+        "Hand.L"
+      ],
+      "frames": [
+        1,
+        31
+      ]
+    },
+    {
+      "clip": "Kick",
+      "rotation_bones": [
+        "UpperArm.R",
+        "Forearm.R",
+        "Hand.R",
+        "UpperArm.L",
+        "Forearm.L",
+        "Hand.L"
+      ],
+      "frames": [
+        1,
+        29
+      ]
+    }
+  ],
+  "revision": "football-arm-gesture-2026-10-08",
+  "original_channels_preserved_exact": 1260,
+  "source_blend_sha256": "043653962de2f90fbc6c68fda11f880ed4097cfa5e921b9868c2951a28d7f76d",
+  "export_audit": {
+    "original_rig_exact": true,
+    "original_non_arm_channels_exact": true,
+    "changed_channels": {
+      "Catch": [],
+      "Celebrate": [],
+      "Idle": [
+        "UpperArm.R/rotation",
+        "Forearm.R/rotation",
+        "Hand.R/rotation",
+        "UpperArm.L/rotation",
+        "Forearm.L/rotation",
+        "Hand.L/rotation"
+      ],
+      "Kick": [
+        "UpperArm.R/rotation",
+        "Forearm.R/rotation",
+        "Hand.R/rotation",
+        "UpperArm.L/rotation",
+        "Forearm.L/rotation",
+        "Hand.L/rotation"
+      ],
+      "SaveLeft": [],
+      "SaveLowLeft": [],
+      "SaveLowRight": [],
+      "SaveRight": []
+    },
+    "exported_vertices": 61432,
+    "triangles": 101904,
+    "animations": [
+      "Catch",
+      "Celebrate",
+      "Idle",
+      "Kick",
+      "SaveLeft",
+      "SaveLowLeft",
+      "SaveLowRight",
+      "SaveRight"
+    ],
+    "maximum_weight_sum_error": 1.3504177331924438e-07,
+    "uv0_and_print_uv2_present": true,
+    "bytes": 9519356
+  }
+}

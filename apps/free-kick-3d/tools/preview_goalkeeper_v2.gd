@@ -13,7 +13,7 @@ func capture() -> void:
 	var keeper = game.away_keeper
 	var animation: AnimationPlayer = keeper.goalkeeper_animation
 	var skeleton: Skeleton3D = keeper.skeleton
-	assert(skeleton.get_bone_count() == 18)
+	assert(skeleton.get_bone_count() >= 18)
 	for clip in ["Idle", "Catch", "Celebrate", "SaveLeft", "SaveRight", "SaveLowLeft", "SaveLowRight"]:
 		assert(animation.has_animation(clip), "Missing %s" % clip)
 	if show_dive:

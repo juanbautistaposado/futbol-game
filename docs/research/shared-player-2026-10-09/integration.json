@@ -1,0 +1,21 @@
+{
+  "date": "2026-10-09",
+  "runtime": "apps/free-kick-3d/assets/footballer/meshy_striker.glb",
+  "source_blend": "source-assets/footballer/meshy_striker.blend",
+  "base": "source-assets/footballer/meshy_player.blend",
+  "bones": 53,
+  "jersey_polygons": 38291,
+  "animation_channels_preserved": 1272,
+  "license": "CC-BY-4.0",
+  "author": "Meshy AI",
+  "extra_meshy_credits": 0,
+  "runtime_sha256": "8ea7d1e966c946bc1477283d590531850aa52dd01fcfeb93aae5bdb9398afbcf",
+  "source_blend_sha256": "f4dc77454456fab8bdf276f746609340e36133eb8518364b7bf6b13dd7ee8a4f",
+  "export_audit": {
+    "body_geometry_uv_weights_exact": true,
+    "rig_exact": true,
+    "all_player_clips_exact": true,
+    "triangles": 101904,
+    "bytes": 9555404
+  }
+}

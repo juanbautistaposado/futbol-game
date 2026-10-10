@@ -1,0 +1,20 @@
+{
+  "JOINTS_0_unchanged": true,
+  "WEIGHTS_0_unchanged": true,
+  "TEXCOORD_0_unchanged": true,
+  "TEXCOORD_1_unchanged": true,
+  "indices_unchanged": false,
+  "inverse_bind_matrices_unchanged": true,
+  "joint_hierarchy_unchanged": true,
+  "animation_names_unchanged": true,
+  "animation_samples_unchanged": true,
+  "source_topology_unchanged": true,
+  "triangle_counts_unchanged": true,
+  "changed_triangulation_surfaces": [
+    {
+      "material": "Shorts",
+      "old_indices": 64704,
+      "new_indices": 64704
+    }
+  ]
+}
