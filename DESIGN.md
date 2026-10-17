@@ -22,9 +22,17 @@ Acción naranja con tinta oscura: contraste 5,03:1. Crema sobre azul: 5,18:1. Te
 ## Composición
 
 - Inicio: marca original en cartel, franjas diagonales azul/naranja, JUGAR rasterizado con letras y flecha de la propuesta y Configurar como acción tipográfica secundaria. El récord es un dato separado. Se eliminó el eslogan genérico.
-- Selección y personalización: la misma gráfica en los márgenes con jugador visible. Los controles mantienen tamaño estable al seleccionarse.
+- Selección: la misma gráfica en los márgenes con jugador visible. Los controles mantienen tamaño estable al seleccionarse.
+- Personalización: editor de estudio inspirado en FC 26, con categorías arriba,
+  catálogo a la izquierda y el nuevo jugador 3D a la derecha. Comparte la
+  dirección Cartel de desafío del inicio: Bungee y Archivo, ciruela y crema,
+  navegación azul, placas naranjas y foco amarillo; franjas suaves hasta los bordes.
 - Ajustes: fondo opaco de tinta, grupos legibles y detalles diagonales en los extremos. La animación de la escena no interfiere con la lectura.
-- Preparación: cifras grandes y placas recortadas; acciones y rangos conservan su funcionamiento.
+- Preparación: JUGAR abre una fila de tres portadas ilustradas — Individual,
+  Duelo local y Ronda local — con títulos nativos sobre placas inclinadas.
+  La opción aplicada lleva placa naranja, marco amarillo y check; debajo quedan
+  los contadores de tiros y jugadores, el resumen, VOLVER y EMPEZAR. El estadio
+  oscurecido queda detrás sin avatar y las diagonales alcanzan el viewport.
 - HUD: placa de marcador recortada, puntuación amarilla, turno en banda azul, medidor con marco diagonal, barra rojo/amarillo/verde e instrucciones crema sobre tinta oscura. La cámara y los blancos 3D se mantienen.
 - Pausa y resultados: tipografía y paleta arcade, foco visible; los resultados largos envuelven el texto y mantienen sus márgenes.
 
@@ -94,3 +102,222 @@ centrada, con la misma escala y navegación.
 Se verificaron las seis pantallas en 1920×984 y 1280×960. `menu_flow` pasa y la
 exportación web release termina correctamente. Capturas en
 `docs/design/ui-config-bordes-2026-10-04/`.
+
+## Editor de jugador inspirado en FC 26 — 10 de octubre de 2026
+
+La nueva dirección solicitada afecta la personalización del delantero y del
+arquero. Se inspeccionó por segmentos el video de modo carrera de
+[Vance Studios](https://www.youtube.com/watch?v=qRYtlUU4OQs), especialmente rostro
+a 2:45 y equipación a 8:17. Las referencias y capturas están en
+`docs/research/editor-fc26-2026-10-10.md`.
+
+`ui/character_editor.gd` separa Identidad, Aspecto e Indumentaria, con
+subcategorías y muestras de color. Archivo reemplaza Bungee en esta pantalla;
+carbón, blanco y verde distinguen navegación, foco y opción aplicada. Nombre,
+dorsal, piel, cabello, barba, camiseta y short son opciones funcionales. El
+selector de color libre comparte el tema del editor. L1/R1 y PgUp/PgDn cambian
+categoría; Esc y Listo vuelven a la selección.
+
+El nuevo PLAYER Meshy es el modelo de personalización de ambos roles. Las máscaras
+UV permiten modificar piel, pelo, short y barba del atlas sin reemplazar el GLB
+ni las animaciones. La camiseta conserva su material separado; las áreas
+residuales del arquero siguen el mismo color. Nombre y dorsal permanecen en la
+espalda. La barba cambia mediante textura, sin modificar la geometría de la cara;
+medias y botines conservan su aspecto original. La opción PLAYER conserva el atlas
+original. Cada rol guarda su identidad y colores por separado.
+
+`menu_background.gd` oculta el estadio durante la edición y presenta un estudio
+con iluminación y fondo continuo. Identidad/Indumentaria muestran el cuerpo
+entero; Aspecto acerca la cámara al rostro. El giro se conserva al modificar un
+color. Al salir se restauran estadio y cámara del menú. Los fondos de interfaz
+alcanzan los bordes del viewport mientras los controles mantienen su escala.
+
+Validación: capturas nativas a 1280×720 y 960×540; exportación web release y prueba
+en navegador integrado de configuración, personalización, cambio real de piel,
+zoom y giro, sin errores de consola. Pasaron `character_editor_test`,
+`custom_players_test`, `meshy_player_test`, `athlete_v3_test` y `menu_flow_test`.
+Capturas en `docs/design/editor-fc26-2026-10-10/`. El build local está actualizado;
+esta iteración no se publicó en Netlify.
+
+## Piel y vello facial — 11 de octubre de 2026
+
+Aspecto incorpora **Vello facial** con opciones independientes para barba/bigote
+y cejas. Las máscaras anteriores excluían parte del bigote junto con los labios
+y parte de las cejas junto con los ojos; además, las fibras de vello permanecían
+en el mapa de normales. Las regiones nuevas restauran piel sin esas fibras al
+desactivar cada opción y protegen ojos y labios. Delantero y arquero guardan
+las cejas por separado; los perfiles anteriores mantienen cejas por defecto.
+
+La paleta de piel pasa de seis a nueve tonos, con más pasos intermedios. El
+shader reduce la reflectancia de piel bajo las luces reales: la frente del tono
+medio antes saturaba el canal rojo en toda el área medida; ahora conserva
+detalle. Se mantienen selección de color libre, modelo, rig y animaciones.
+
+Validación: `character_editor_test` y `custom_players_test`; cobertura UV real de
+bigote, barba y cejas para ambos GLB, con ojos/labios protegidos; capturas GPU con
+nueve tonos distintos y cambios visibles e independientes del vello facial.
+Se comprobaron controles a 1280×720 y 960×540 y se regeneró el build web local.
+Evidencia en `docs/design/editor-appearance-2026-10-11/`.
+
+```sh
+godot --path apps/free-kick-3d --script tools/preview_appearance.gd -- /tmp/appearance
+python3 apps/free-kick-3d/tools/check_appearance_renders.py /tmp/appearance
+python3 apps/free-kick-3d/tools/check_meshy_facial_masks.py
+```
+
+Las verificaciones Python requieren Pillow y NumPy. Esta corrección está
+disponible en la vista local; no se publicó en Netlify.
+
+La revisión posterior corrige también los párpados y los bordes de la boca:
+la protección del ojo sigue la abertura real, conservando el iris, y el párpado
+inferior pasa de 1,3 % a 100 % de cobertura de piel en los puntos de prueba de
+ambos modelos. Los labios usan la piel elegida con un matiz rosado moderado;
+el borde mezcla ambos pigmentos personalizados y no conserva el atlas claro.
+La máscara facial añade el pigmento labial en su canal alpha. Las pruebas
+comparan tonos claros y oscuros y comprueban que los labios también respondan.
+Capturas actualizadas en la subcarpeta `features/`.
+
+Por pedido del usuario se elimina la opción de ocultar cejas. Aspecto muestra
+Piel, Cabello y Barba; las cejas permanecen visibles y siguen el color del
+cabello incluso cuando un guardado anterior tenía `eyebrows=false`. Se conservan
+los controles de barba/bigote y la corrección de color en párpados y labios.
+
+
+## Editor integrado a Cartel de desafío — 11 de octubre de 2026
+
+Por pedido del usuario, el editor recupera la identidad de la propuesta aprobada
+`docs/design/ui-concepts-2026-10-03/03-arcade.png`. Sustituye la excepción visual
+carbón/blanco/verde de la iteración de FC 26. Conserva las categorías, el catálogo
+y la vista 3D de esa implementación.
+
+Bungee se aplica a TU DELANTERO/TU ARQUERO, títulos de campos y LISTO. Archivo 400
+se usa para lectura y Archivo 600 para controles. Los estilos reutilizan fuentes,
+paleta y texturas de placas de `visual_theme.gd`: crema sobre ciruela, pestaña
+azul, opción aplicada y acción final naranjas, selección/foco amarillo. Las
+placas compactas escalan su textura completa para conservar el corte y el
+espacio del texto. La decoración diagonal se dibuja con las mismas máscaras
+suavizadas de la home y alcanza los bordes reales en pantallas anchas.
+
+Se mantiene el estudio 3D y su iluminación para conservar los tonos de piel
+ya corregidos. Nombre, dorsal, colores por rol, barba, cámara, giro y regreso
+permanecen funcionales. Las cejas siguen siempre visibles.
+
+Validación: character_editor y menu_flow pasan sin errores de scripts. Se revisan
+Identidad, Aspecto, Barba e Indumentaria a 1280×720 y 960×540, y el marco a
+1920×984. La exportación web local se actualiza y se verifica en el navegador.
+Capturas: `docs/design/editor-poster-2026-10-11/`.
+
+## Selección ilustrada de modos — 12 de octubre de 2026
+
+Al pulsar JUGAR, la preparación presenta tres portadas siguiendo la composición
+de la referencia de Rocket League aportada por el usuario y la identidad vigente
+Cartel de desafío. Hereda paleta y tipografía: Bungee para JUGAR, títulos de modo
+y EMPEZAR; Archivo para descripciones, ajustes y VOLVER. Los rótulos son texto
+nativo, separado del arte. La fila usa HBoxContainer dentro de la composición
+centrada de 1024×640; el estadio queda oscurecido, sin delantero ni arquero de
+vista previa, y las diagonales se extienden hasta los bordes reales.
+
+- **Individual:** una persona tira y ataja contra la IA.
+- **Duelo local:** dos personas tiran por turnos en el mismo dispositivo.
+- **Ronda local:** tres o cuatro personas tiran por turnos; la portada propone
+  cuatro y el contador permite ajustar a tres.
+
+Las portadas aplican los presets de 1, 2 o 4 participantes. El contador de
+jugadores admite 1–4 y sincroniza la portada activa; tiros conserva el rango
+5–15. El resumen muestra tiros y atajadas con muerte súbita para Individual,
+y tiros por persona y remates totales para partidas locales. EMPEZAR inicia y
+guarda la configuración; VOLVER o Esc regresan al inicio. Cada portada es un
+Button con selección naranja y check amarillo, hover azul y marco amarillo
+para selección o foco; el recorrido de foco enlaza portadas, contadores y
+acciones. La implementación está en `menu.gd` (`show_setup`, `select_play_mode`,
+`refresh_setup`) y `ui/play_mode_card.gd`.
+
+`ui/play-modes/individual.png`, `duel.png` y `group.png` son ilustraciones
+originales generadas con Imagegen integrado a 1536×1024, importadas lossless
+con mipmaps y filtrado lineal. El encuadre recorta conservando proporciones.
+Prompts finales, edición de Ronda, hashes y procedencia están en
+`source-assets/ui/play-modes/`; los tres PNG conservan su prompt incrustado.
+
+Validación nativa: siete capturas a 1280×720, 960×540 y 1920×984 en
+`docs/design/play-menu-2026-10-12/`. El reviewer independiente devolvió
+`disposition: ship`, sin recortes ni solapes en las capturas inspeccionadas.
+`play_modes_test.gd` y `menu_flow_test.gd` pasan sin SCRIPT ERROR; sus logs
+conservan avisos de certificados del sandbox y materiales del renderer dummy.
+El export web local terminó correctamente. En el navegador integrado a 1280×720
+se verificaron JUGAR, los tres presets, los contadores y Tab/Enter; la consola
+no registró errores ni advertencias. Evidencia: `docs/design/play-menu-2026-10-12/web-play-menu.jpg`.
+Esta iteración no se publicó.
+
+El detector de patrones HTML/CSS no aplica a esta interfaz nativa Godot. El
+contrato de esta pantalla y el detalle de validación están en
+`docs/design/play-menu-2026-10-12/brief.md`.
+
+## Ajuste: duelo único contra el bot — 12 de octubre de 2026
+
+JUGAR ofrece únicamente UNO CONTRA UNO contra el bot. Conserva la portada
+Individual y la estética de Cartel de desafío: Bungee, Archivo, ciruela,
+naranja, azul y amarillo. La composición presenta una portada a la izquierda
+y las reglas a la derecha. Se eliminan las opciones locales y los contadores.
+EMPEZAR tiene el foco inicial; VOLVER y Esc regresan a la home.
+
+La partida tiene cinco remates por lado, alternando ataque y defensa. Sólo si
+las cinco parejas terminan empatadas continúa con una pareja extra por vez
+hasta desempatar. Menu y Main ignoran los valores antiguos de tiros y jugadores
+al cargar un perfil; EMPEZAR guarda cinco tiros y un participante humano.
+
+Validación: play_modes_test, round_flow_test y menu_flow_test pasan. El test de
+ronda verifica cinco parejas sin desempate, empate inicial, empate en la primera
+pareja extra y final después de que ambos lados rematen en la siguiente pareja.
+
+Verificado en navegador integrado a 1280×720: una sola opción, reglas de cinco
+tiros visibles y ningún contador para aumentarlas. Consola sin errores ni
+advertencias. Captura: `docs/design/play-menu-2026-10-12/web-bot-five-shots.jpg`.
+Export web local actualizado; no se realizó publicación remota.
+
+## Apartado Personaje — 12 de octubre de 2026
+
+La home presenta JUGAR, PERSONAJE y Configurar, en ese orden. PERSONAJE usa una
+placa crema con Bungee y bordes suavizados, encima de Configurar. El récord se
+reubica debajo de ambas acciones sin cambiar la escala del título ni de JUGAR.
+
+PERSONAJE reúne Elegir delantero y Elegir arquero. Sus listas y editores
+conservan la personalización actual. VOLVER y Esc regresan desde cada lista a
+PERSONAJE, y desde PERSONAJE a la home con foco en su botón. Configurar contiene
+sólo dificultad, gráficos, volumen y créditos. La navegación con teclado
+enlaza las tres acciones de inicio. menu_flow_test verifica estas rutas y la
+ausencia de selección de personajes dentro de Configurar.
+
+Validado en Godot y navegador integrado a 1280×720. La prueba de navegación
+pasó; en web se confirmó Personaje sobre Configurar, acceso al arquero y
+regreso con Esc a Personaje y a la home. Consola sin errores ni advertencias.
+Capturas: `docs/design/character-section-2026-10-12/web-home.jpg` y
+`web-characters.jpg` en el mismo directorio. Export web local actualizado.
+
+El ajuste posterior del usuario pide el estilo previo del botón Configurar
+también para Personaje. Su placa ahora es `ui/brand/personaje-raster.png`,
+generada con image_gen a partir de Configurar: tipografía atlética inclinada,
+mayúscula inicial, placa crema y sombra ciruela. Usa el mismo RasterAction y
+las mismas dimensiones que Configurar. Fuente y prompt preservados en
+`source-assets/ui/character-button/`; la navegación permanece intacta.
+
+Botón raster verificado en Godot y navegador integrado a 1280×720.
+menu_flow_test: PASS. Consola web sin errores ni advertencias. Captura final:
+`docs/design/character-section-2026-10-12/web-home-matched-style.jpg`.
+
+Los accesos Elegir delantero y Elegir arquero ahora comparten estilo secundario
+ciruela y tamaño 330×54 (antes 390×70), con texto y flecha sin recortes.
+Verificado en Godot y web a 1280×720: `docs/design/character-section-2026-10-12/web-compact-buttons.jpg`.
+
+La home compacta Jugar, Personaje y Configurar con 2 unidades de separación
+entre sus zonas de clic. Jugar ocupa 514×130; las placas secundarias 378×56.
+El récord acompaña el bloque a y=576. Verificado en Godot y web a 1280×720:
+`docs/design/character-section-2026-10-12/web-home-tight-actions.jpg`.
+
+El segundo ajuste pega visualmente las placas: Personaje en y=464 y Configurar
+en y=506, sin volver a reducir su tamaño. Los rectángulos transparentes se
+solapan; RasterAction usa una máscara alpha precalculada para que sólo la
+forma visible reciba clics. La navegación y máscara pasan menu_flow_test.
+
+Verificado en navegador a 1280×720: los tres accesos abren sus pantallas y
+la consola no registra errores ni advertencias. Captura final:
+`docs/design/character-section-2026-10-12/web-home-touching-actions.jpg`.

@@ -44,11 +44,23 @@ func capture() -> void:
 			root.add_child(menu)
 			match screen:
 				"settings": menu.show_settings()
+				"characters": menu.show_characters()
 				"setup": menu.show_setup()
+				"play-bot", "play-individual":
+					menu.show_setup()
 				"keeper": menu.show_keepers()
 				"striker": menu.show_strikers()
 				"custom": menu.show_custom_keeper()
 				"custom-striker": menu.show_custom_striker()
+				"editor-face", "editor-facial-hair", "editor-kit", "editor-back":
+					menu.show_custom_striker()
+					var editor: Control = menu.page.get_node("CharacterEditor")
+					if screen in ["editor-face", "editor-facial-hair"]: editor.get_node("CategoryAppearance").pressed.emit()
+					else: editor.get_node("CategoryKit").pressed.emit()
+					if screen == "editor-facial-hair":
+						editor.find_child("FieldBeard", true, false).pressed.emit()
+						editor.find_child("BeardOff", true, false).pressed.emit()
+					if screen == "editor-back": menu.background.rotate_editor(PI)
 				"home-hover", "home-pressed":
 					var motion := InputEventMouseMotion.new()
 					motion.position = menu.play_button.get_global_rect().get_center()
@@ -64,6 +76,8 @@ func capture() -> void:
 						Input.parse_input_event(click)
 			scene = menu
 		for i in range(12): await process_frame
+		if screen.begins_with("editor-"):
+			await create_timer(0.3).timeout
 		await RenderingServer.frame_post_draw
 		var path := output.path_join(screen + ".png") if screens.size() > 1 else output
 		var error := root.get_viewport().get_texture().get_image().save_png(path)

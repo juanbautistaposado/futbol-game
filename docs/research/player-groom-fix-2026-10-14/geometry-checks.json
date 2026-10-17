@@ -1,0 +1,20 @@
+[
+  {
+    "role": "striker",
+    "nape_rays": 525,
+    "minimum_nape_clearance_m": 0.0012620538473129272,
+    "beard_strands": 12000,
+    "maximum_beard_root_gap_m": 0.00012022592272842303,
+    "head_eyes_brows_exact": true,
+    "mask_exported": true
+  },
+  {
+    "role": "keeper",
+    "nape_rays": 525,
+    "minimum_nape_clearance_m": 0.0012620538473129272,
+    "beard_strands": 12000,
+    "maximum_beard_root_gap_m": 0.00012022592272842303,
+    "head_eyes_brows_exact": true,
+    "mask_exported": true
+  }
+]

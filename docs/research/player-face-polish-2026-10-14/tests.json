@@ -1,0 +1,31 @@
+[
+  {
+    "test": "custom_players",
+    "passed": true
+  },
+  {
+    "test": "meshy_player",
+    "passed": true
+  },
+  {
+    "test": "meshy_keeper",
+    "passed": true
+  },
+  {
+    "test": "striker_animation",
+    "passed": true
+  },
+  {
+    "test": "keeper_animation",
+    "passed": true
+  },
+  {
+    "test": "footballer_facial_motion",
+    "passed": true
+  },
+  {
+    "test": "character_editor",
+    "renderer": "native OpenGL",
+    "passed": true
+  }
+]

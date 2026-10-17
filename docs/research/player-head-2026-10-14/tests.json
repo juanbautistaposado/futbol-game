@@ -1,0 +1,59 @@
+{
+  "godot": "4.7.1",
+  "tests": [
+    {
+      "name": "custom_players",
+      "mode": "headless",
+      "result": "PASS",
+      "output": [
+        "PASS: nueva base 3D, piel/cabello/camiseta/short/barba/dorsal independientes y persistentes para ambos roles"
+      ],
+      "environment_note": "macOS certificate store access warning"
+    },
+    {
+      "name": "meshy_player",
+      "mode": "headless",
+      "result": "PASS",
+      "output": [
+        "PASS: selección persistente, modelo Meshy completo, dorsal, patada y cambio de turnos"
+      ],
+      "environment_note": "macOS certificate store access warning"
+    },
+    {
+      "name": "meshy_keeper",
+      "mode": "headless",
+      "result": "PASS",
+      "output": [
+        "PASS: ambos arqueros usan PLAYER, color/dorsal independientes y captura conserva las manos"
+      ],
+      "environment_note": "macOS certificate store access warning"
+    },
+    {
+      "name": "striker_animation",
+      "mode": "headless",
+      "result": "PASS",
+      "output": [
+        "PASS: staggered preparation, grounded breathing, seamless boundaries, alternating steps, planted support, preserved impact and physics synchronization"
+      ],
+      "environment_note": "macOS certificate store access warning"
+    },
+    {
+      "name": "keeper_animation",
+      "mode": "headless",
+      "result": "PASS",
+      "output": [
+        "PASS: guardia, reacción, alcance, pausa, aterrizaje, recuperación, parada central y reset"
+      ],
+      "environment_note": "macOS certificate store access warning"
+    },
+    {
+      "name": "character_editor",
+      "mode": "native",
+      "result": "PASS",
+      "output": [
+        "PASS: editor changes persist per role, category zoom, rotation survives edits, studio exits and Esc returns to selection"
+      ],
+      "environment_note": null
+    }
+  ]
+}

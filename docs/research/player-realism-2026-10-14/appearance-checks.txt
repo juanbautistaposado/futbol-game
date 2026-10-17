@@ -1,0 +1,3 @@
+PASS: un-clipped skin, nine gradual tones, lips follow complexion, beard toggle preserves eyebrows
+Forehead RGB: [[255.0, 233.0, 196.7], [250.5, 208.4, 172.6], [236.1, 190.2, 155.3], [215.2, 163.8, 129.2], [197.3, 147.5, 115.0], [178.4, 127.2, 99.7], [153.8, 111.1, 88.5], [133.2, 99.7, 84.3], [114.9, 91.0, 77.9]]
+Beard toggle difference: 24.07

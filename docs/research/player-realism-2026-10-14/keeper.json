@@ -1,0 +1,45 @@
+{
+  "role": "keeper",
+  "source": "source-assets/footballer/meshy_keeper_realism.blend",
+  "triangles_before": 91826,
+  "triangles_after": 241066,
+  "vertices": 140435,
+  "garment_return_edges": 1912,
+  "groom_fibers": {
+    "HairGroom": 3400,
+    "BeardGroom": 2300,
+    "BrowGroom": 340
+  },
+  "animation_channels_preserved": 1272,
+  "sha256": "882d68c5346eb292ef962dae4ad19d8bbbdd730cfe58ad8f3d84cb636055ade0",
+  "export_audit": {
+    "rig_and_clips_exact": true,
+    "bones": 53,
+    "clips": [
+      "Catch",
+      "Celebrate",
+      "Idle",
+      "Kick",
+      "SaveLeft",
+      "SaveLowLeft",
+      "SaveLowRight",
+      "SaveRight"
+    ],
+    "triangles": 241066,
+    "materials": {
+      "MeshyPlayer": 63175,
+      "Jersey": 33803,
+      "GoalkeeperGloves": 7637,
+      "TailoredShorts": 24147,
+      "CollarKnit": 2048,
+      "EyeSurface": 1536,
+      "HairGroom": 61200,
+      "BeardGroom": 41400,
+      "BrowGroom": 6120
+    },
+    "maximum_weight_error": 1.341104507446289e-07,
+    "winding_reference_vertices": 6593,
+    "reversed_reference_normals": 0,
+    "bytes": 15811492
+  }
+}

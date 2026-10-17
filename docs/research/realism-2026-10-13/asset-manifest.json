@@ -1,0 +1,59 @@
+{
+  "date": "2026-10-13",
+  "engine": "Godot 4.7.1 Compatibility",
+  "validation": "Native renders and local WebGL match",
+  "families": [
+    {
+      "name": "stadium daylight",
+      "paths": [
+        "pitch_lighting.gd",
+        "shaders/stadium_daylight.gdshader"
+      ],
+      "source": "Project-authored procedural sky and lighting",
+      "budget": "256 sky radiance, static; no raster downloads"
+    },
+    {
+      "name": "turf",
+      "paths": [
+        "pitch_grass.gd",
+        "shaders/turf.gdshader",
+        "shaders/grass_blades.gdshader",
+        "shaders/turf_surface.gdshaderinc"
+      ],
+      "source": "Existing project turf maps and project-authored shaders",
+      "budget": "Existing density and four MultiMesh patterns"
+    },
+    {
+      "name": "athlete surfaces",
+      "paths": [
+        "footballer_visual.gd",
+        "shaders/athlete_kit.gdshader",
+        "shaders/football_cloth_detail.gdshaderinc",
+        "shaders/goalkeeper_latex.gdshader"
+      ],
+      "source": "Existing Meshy AI CC BY 4.0 atlas plus project-authored material code",
+      "restrictions": "Keep visible attribution; no new generations"
+    },
+    {
+      "name": "venue",
+      "paths": [
+        "stadium.gd",
+        "stadium_dressing.gd",
+        "shaders/stadium_surface.gdshader",
+        "stadium_crowd.gd",
+        "shaders/crowd.gdshader",
+        "shaders/crowd_impostor.gdshader"
+      ],
+      "source": "Project geometry/code, existing Meshy-derived crowd",
+      "budget": "Merged static surfaces; existing crowd LODs"
+    },
+    {
+      "name": "ball",
+      "paths": [
+        "shaders/ball.gdshader"
+      ],
+      "source": "Project-authored procedural panels, seams and grain",
+      "budget": "One existing sphere mesh, no new textures"
+    }
+  ]
+}

@@ -9,7 +9,7 @@ func run() -> void:
 	root.add_child(game)
 	for keeper in [game.home_keeper, game.away_keeper]:
 		var body: MeshInstance3D = keeper.goalkeeper_visual.get_node("FootballerRig/Skeleton3D/FootballerBody")
-		assert(body.mesh.get_surface_count() == 3)
+		assert(body.mesh.get_surface_count() == 11, "Misma cabeza anatómica del jugador más guantes")
 		assert(keeper.skeleton.get_bone_count() == 53)
 		for clip in ["Idle", "Catch", "Celebrate", "SaveLeft", "SaveRight", "SaveLowLeft", "SaveLowRight"]:
 			assert(keeper.goalkeeper_animation.has_animation(clip))
@@ -27,7 +27,8 @@ func run() -> void:
 			elif source.resource_name == "MeshyPlayer":
 				assert((body.get_surface_override_material(i) as ShaderMaterial).get_shader_parameter("tint") == Color.WHITE)
 			elif source.resource_name == "GoalkeeperGloves":
-				assert(body.get_surface_override_material(i) == null, "Los guantes conservan su material independiente")
+				var latex := body.get_surface_override_material(i) as ShaderMaterial
+				assert(latex != null and latex.shader == preload("res://shaders/goalkeeper_latex.gdshader"), "Los guantes conservan su material de látex independiente")
 		assert(avatar.get_node("JerseyPrint/Name").text == "ARQUERO")
 		keeper.catch_pose(1)
 		keeper.goalkeeper_animation.advance(.4)

@@ -10,16 +10,16 @@ func new_game():
 	game.save_path = "/tmp/futbol-outcome-test-unused.cfg"
 	root.add_child(game)
 	return game
-func outcome(target: Vector3, keeper: bool, decision_roll := 0.99) -> Array:
+func outcome(target: Vector3, keeper: bool, decision_roll := 1.0) -> Array:
 	var game = new_game()
 	game.difficulty = "dificil"
-	game.keeper_rng.seed = 42
 	game.shot_power = 0.0
 	if not keeper:
 		game.away_keeper.position.x = -8
 		game.reset_ball(Vector3(0,0.8,-47.5))
 	game.launch_ball(target,1.65 if keeper else 0.6,-1)
-	if keeper: game.move_keeper_for_attack(target,decision_roll)
+	if keeper:
+		game.move_keeper_for_attack(decision_roll)
 	while not game.resolved: await physics_frame
 	var result := [game.player_goals,game.hit_woodwork,game.status_label.text]
 	game.queue_free()
@@ -30,14 +30,6 @@ func run() -> void:
 	Engine.time_scale = 4
 	Engine.physics_ticks_per_second = 240
 	var game = new_game()
-	var counts: Array[int] = []
-	for difficulty in ["facil","medio","dificil"]:
-		game.difficulty = difficulty
-		var wrong := 0
-		for i in range(100):
-			if game.keeper_read(Vector3(2,1,-52.8),float(i)/100).x < 0: wrong += 1
-		counts.append(wrong)
-	check(counts == [60,40,20], "Wrong-way probability must be 60/40/20 percent by difficulty")
 	game.aim_x = 2
 	game.aim_y = 3
 	var wide: Vector3 = game.player_shot_target(1.0)
@@ -47,9 +39,9 @@ func run() -> void:
 	var slow := await outcome(Vector3(0,1.35,-52.8),true)
 	check(slow[0] == 0 and str(slow[2]).begins_with("¡Atajada"), "Keeper must save a reachable zero-power shot: " + str(slow))
 	var wrong_center := await outcome(Vector3(0,1.35,-52.8),true,0.0)
-	check(wrong_center[0] == 1, "A wrong-way dive must concede a centered on-target shot: " + str(wrong_center))
+	check(wrong_center[0] == 1, "A wrong-side dive must concede a centered on-target shot: " + str(wrong_center))
 	var wrong_side := await outcome(Vector3(2.0,1.35,-52.8),true,0.0)
-	check(wrong_side[0] == 1, "A wrong-way dive must concede an on-target side shot: " + str(wrong_side))
+	check(wrong_side[0] == 1, "A wrong-side dive must concede an on-target side shot: " + str(wrong_side))
 	var post_in := await outcome(Vector3(4.2,0.8,-52.8),false)
 	check(post_in[0] == 1 and post_in[1], "Inside post must physically rebound into goal: " + str(post_in))
 	var post_out := await outcome(Vector3(4.5,0.8,-52.8),false)

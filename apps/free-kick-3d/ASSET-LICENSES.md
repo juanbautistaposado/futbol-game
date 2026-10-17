@@ -188,3 +188,96 @@ rig y las ocho animaciones de PLAYER; la camiseta pasa a un material separado
 para conservar los colores de cada identidad. No hubo créditos adicionales.
 Fuente: `source-assets/footballer/meshy_striker.blend`; informe:
 `docs/research/shared-player-2026-10-09/integration.json`.
+
+## Máscaras de personalización PLAYER — 10 de octubre de 2026
+
+`assets/footballer/meshy_appearance_mask.png`, `meshy_cloth_mask.png` y
+`meshy_facial_mask.png` son
+mapas de regiones UV derivados de la geometría y el atlas de `meshy_striker.glb`
+(Meshy AI, Meshy 6 Lite, CC BY 4.0). Los genera
+`tools/build_meshy_appearance_mask.py` mediante clasificación de posición
+de reposo y color; delantero y arquero comparten UV0. Permiten recolorear
+piel, labios, cabello, short, barba, cejas y las zonas residuales de camiseta, conservando
+geometría, rig y animaciones. Barba y cejas se adaptan en textura; al ocultarlas
+también se neutralizan sus fibras en el mapa de normales. La silueta permanece.
+No hubo generaciones ni créditos adicionales; se
+mantiene la atribución visible a Meshy AI en **Configurar → Créditos**.
+
+### Ajuste de ropa y materiales (2026-10-11)
+
+`meshy_striker_cloth_v2.blend` y `meshy_keeper_cloth_v2.blend` son variantes
+editables de las fuentes Meshy AI existentes (CC BY 4.0). La adaptación del
+proyecto suaviza prendas, ajusta pesos y simplifica geometría conservando
+esqueleto, animaciones y atlas. Los shaders de tejido y látex son del proyecto.
+No se utilizaron assets externos ni créditos adicionales de Meshy.
+
+## Portadas del menú JUGAR — 12 de octubre de 2026
+
+`ui/play-modes/individual.png`, `duel.png` y `group.png` son ilustraciones
+originales generadas para este proyecto con la herramienta integrada
+**OpenAI image_gen**, a 1536×1024. La referencia de menú de Rocket League
+aportada por el usuario se usó para la composición; no se incorporaron imágenes,
+marcas ni recursos extraídos de ese juego. Los títulos y descripciones se
+dibujan como texto nativo con Bungee/Archivo, cuyas licencias SIL OFL 1.1 se
+conservan arriba.
+
+La procedencia, dimensiones, hashes SHA-256 y ajustes de importación están en
+`source-assets/ui/play-modes/manifest.json`. Los prompts completos se conservan
+en `individual.prompt.txt`, `duel.prompt.txt`, `group.prompt.txt` y
+`group-edit.prompt.txt`; el último documenta la edición de la portada de Ronda.
+Los tres PNG finales conservan su prompt incrustado (scan: 0 faltantes).
+Importación lossless, mipmaps y filtrado lineal; el encuadre del componente
+recorta sin estirar el arte. Son imágenes generadas con la herramienta de OpenAI;
+no se presentan como assets CC0 ni como recursos de terceros licenciados.
+
+## Botón Personaje — 12 de octubre de 2026
+
+`ui/brand/personaje-raster.png` se generó con OpenAI image_gen integrado,
+editando el texto del botón Configurar original del proyecto. PNG con alpha
+preservado, importación lossless y mipmaps. Fuente, prompt y SHA-256 en
+`source-assets/ui/character-button/manifest.json`. No incorpora recursos
+externos; misma procedencia que el resto de placas generadas de la home.
+
+### Materiales y estadio realista (2026-10-13)
+
+Cielo, superficies de hormigón/metal, microdetalle de pelota y materiales de
+tejido/látex: código procedural del proyecto. Banquillos, cámaras de televisión
+y pasillos de servicio: geometría del proyecto. No se añadieron texturas de
+terceros ni generaciones pagas. Las texturas y siluetas Meshy existentes conservan
+su licencia CC BY 4.0 y su atribución. El público reutiliza esas siluetas con una
+paleta nueva y sombreado bajo la luz del estadio. Inventario y fuentes de consulta:
+`docs/research/realism-2026-10-13/asset-manifest.json` (desde la raíz del repositorio).
+
+### Geometría y piel del jugador (2026-10-14)
+
+`meshy_striker.glb` y `meshy_keeper.glb` incorporan subdivisión y suavizado,
+borde de prendas con espesor, cuello ajustado y geometría de ojos, pelo, cejas
+y barba. Son adaptaciones del personaje Meshy AI existente, CC BY 4.0; mantienen
+la atribución visible. Fuentes: `source-assets/footballer/meshy_*_realism.blend`.
+
+`assets/footballer/skin_microdetail.png` es una textura original generada para
+este proyecto con **OpenAI image_gen** integrado. Se conserva el PNG generado
+sin editar. No se presenta como textura CC0 ni como escaneo fotográfico.
+Prompt, herramienta y tratamiento de importación:
+`source-assets/footballer/realism-2026-10-14/skin.prompt.txt`. Las referencias
+de EA aportadas por el usuario orientan el acabado; no se copiaron sus assets.
+Los shaders de ojos, pelo, piel y tela son código del proyecto. Inventario y
+validación: `docs/research/player-realism-2026-10-14/`.
+
+### Cabeza anatómica y atlas facial (2026-10-14)
+
+Las cabezas y globos oculares de `meshy_striker.glb` y `meshy_keeper.glb` se
+adaptan desde la anatomía MPFB/MakeHuman de `footballer_v4.blend`, ya incluida
+en el proyecto bajo CC0. Se conservan las licencias y procedencia de esa base
+en `source-assets/footballer/MPFB-CC0.txt` y `footballer_v3.md`. El cuerpo, ropa
+y pelo Meshy mantienen CC BY 4.0 y la atribución existente.
+
+`assets/footballer/face_albedo.png` fue generado con **OpenAI image_gen**
+integrado, editando un horneado UV de la textura CC0 existente. El PNG se
+conserva a su resolución nativa de 1254 × 1254, con mipmaps. La salida generada
+no se presenta como CC0, fotografía de una persona real ni escaneo facial.
+Las referencias del usuario orientan el acabado; no se incorporan assets de
+Football Strike ni de EA. El material de ojos, el sombreado facial y las cejas
+geométricas son código/geometría del proyecto. Prompt completo y hashes:
+`source-assets/footballer/head-2026-10-14/manifest.json` y `face.prompt.txt`.
+Fuentes editables: `source-assets/footballer/meshy_*_head.blend`.

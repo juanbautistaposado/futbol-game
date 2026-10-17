@@ -39,7 +39,11 @@ func run() -> void:
 		var other_hand: Vector3 = bone_world(keeper.skeleton, "Hand.R" if direction < 0 else "Hand.L")
 		var head: Vector3 = bone_world(keeper.skeleton, "Head")
 		check(hand.y > 1.15 and direction * (hand.x - head.x) > 0.3, "El guante debe estirarse hacia el tiro a la altura de la pelota")
-		check(other_hand.y > 1.05 and direction * (other_hand.x - head.x) > 0.15, "Los dos guantes deben acompañar la estirada")
+		var support_side := "R" if direction < 0 else "L"
+		var support_local: Vector3 = keeper.skeleton.get_bone_global_pose(keeper.skeleton.find_bone("Hand." + support_side)).origin
+		var support_shoulder: Vector3 = keeper.skeleton.get_bone_global_pose(keeper.skeleton.find_bone("UpperArm." + support_side)).origin
+		check(other_hand.y > 1.05 and other_hand.y < hand.y - 0.05 and -direction * (support_local.x - support_shoulder.x) >= -0.10,
+			"El rechazo con una mano debe dejar el apoyo bajo y en su propio lado, fuera de la cara")
 		check(keeper.position.y > keeper.rest_position.y + 0.1, "El cuerpo debe despegar durante la estirada")
 	print("PASS: patada sincronizada y estirada del arquero" if failures == 0 else "FAIL: %d" % failures)
 	quit(1 if failures > 0 else 0)

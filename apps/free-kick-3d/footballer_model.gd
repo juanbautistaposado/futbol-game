@@ -1,5 +1,5 @@
 extends RefCounted
-## Original procedural footballer meshes. Ring contours replace primitive limbs.
+## Shared identities for the current Meshy avatars and legacy geometry helpers.
 const PROFILES := [
 	{"name":"MATEO", "skin":"bb8868", "hair":"29221f", "shirt":"245baa", "shorts":"172f58", "beard":false},
 	{"name":"BRUNO", "skin":"70462f", "hair":"171616", "shirt":"c53938", "shorts":"252a35", "beard":true},
@@ -7,7 +7,7 @@ const PROFILES := [
 ]
 const DONNARUMMA := {"name":"DONNARUMMA", "skin":"c39578", "hair":"211c19", "shirt":"648740", "shorts":"283421", "beard":true}
 const MESHY_STRIKER_INDEX := 4
-const MESHY_PROFILE := {"name":"PLAYER", "skin":"c99068", "hair":"30241d", "shirt":"ebebdf", "shorts":"172438", "beard":true}
+const MESHY_PROFILE := {"name":"PLAYER", "skin":"c99068", "hair":"30241d", "shirt":"ebebdf", "shorts":"172438", "beard":true, "preserve_atlas":true}
 
 static func material(color: Color, cloth := false) -> Material:
 	if cloth:

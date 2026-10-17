@@ -1,0 +1,14 @@
+{
+	"avatars": 9,
+	"average_frame_ms": 19.9714916666667,
+	"average_process_ms": 22.8568625,
+	"draw_calls": 72.0,
+	"frames": 240,
+	"p95_frame_ms": 22.065,
+	"rendered_primitives": 142914.0,
+	"resolution": [
+		1280,
+		720
+	],
+	"scope": "Native Godot executable; isolated nine-avatar scene, not release web/mobile"
+}

@@ -1,0 +1,59 @@
+{
+  "revision": "expressive-face-groom-2026-10-17",
+  "request": "Reconstruir la cabeza con buenos ojos y una textura facial dedicada",
+  "builder": "apps/free-kick-3d/tools/rebuild_player_head.py",
+  "geometry_source": "source-assets/footballer/footballer_v4.blend",
+  "geometry_license": "CC0-1.0 (MPFB/MakeHuman; existing project asset)",
+  "retained_body_hair_license": "CC-BY-4.0 (Meshy AI; existing attribution retained)",
+  "texture": {
+    "tool": "OpenAI image_gen (built-in)",
+    "mode": "edit",
+    "input": "facial_uv_guide.png",
+    "prompt": "face.prompt.txt",
+    "output": "apps/free-kick-3d/assets/footballer/face_albedo.png",
+    "generated_output_license_note": "Generated image; not represented as CC0 or a photographic scan",
+    "native_dimensions": [
+      1254,
+      1254
+    ],
+    "mipmaps": true,
+    "color_space": "sRGB",
+    "technical_alignment": "UV correction of nose/lip positions; atlas RGB normalized in athlete_face.gdshader for skin customization"
+  },
+  "files": [
+    {
+      "path": "apps/free-kick-3d/assets/footballer/face_albedo.png",
+      "bytes": 2372069,
+      "sha256": "4d1b34391f033b2de75b9b46acb5a0cd7b0fbc609a88121afd156113f481a531",
+      "dimensions": [
+        1254,
+        1254
+      ]
+    },
+    {
+      "path": "source-assets/footballer/head-2026-10-14/facial_uv_guide.png",
+      "bytes": 403588,
+      "sha256": "89109550faca046a2c70b92dc8d2bb580ad814dec220eff31715a567fbe6a957",
+      "dimensions": [
+        2048,
+        2048
+      ]
+    },
+    {
+      "path": "source-assets/footballer/head-2026-10-14/face.prompt.txt",
+      "bytes": 1762,
+      "sha256": "5d9a43a1076db21e813fac5648e4c3df826e7a7964edd2a1a50f751a099160f8"
+    },
+    {
+      "path": "source-assets/footballer/meshy_striker_head.blend",
+      "bytes": 22445426,
+      "sha256": "feca560285793dfd7161f2a19936b1983e3c87bbc44e743c9d8eedaaa2b616b3"
+    },
+    {
+      "path": "source-assets/footballer/meshy_keeper_head.blend",
+      "bytes": 22433628,
+      "sha256": "dde135b1671fb53aae27337026ae302ef604cf1d8b65150f03118b2b7ee498d8"
+    }
+  ],
+  "follow_up": "Barba con fibras curvas más largas y puntas finas; mirada menos caída, proporciones mandibulares suaves y parpadeo anatómico."
+}

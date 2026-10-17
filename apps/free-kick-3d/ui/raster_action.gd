@@ -6,8 +6,10 @@ const SmoothPolygon = preload("res://ui/smooth_polygon.gd")
 var smooth_polygons := SmoothPolygon.new()
 var artwork: Texture2D = ART
 var caption := "JUGAR"
+var hit_mask := BitMap.new()
 
 func _ready() -> void:
+	hit_mask.create_from_image_alpha(artwork.get_image(), 0.1)
 	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	text = caption
 	mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
@@ -21,6 +23,14 @@ func _ready() -> void:
 		smooth_polygons.clear()
 		queue_redraw()
 	)
+
+func _has_point(point: Vector2) -> bool:
+	# Adjacent poster rectangles can overlap; only the visible artwork receives clicks.
+	if not Rect2(Vector2.ZERO, size).has_point(point): return false
+	var pixels := hit_mask.get_size()
+	if pixels == Vector2i.ZERO: return false
+	var pixel := Vector2i(floori(point.x / size.x * pixels.x), floori(point.y / size.y * pixels.y))
+	return hit_mask.get_bitv(pixel)
 
 func _draw() -> void:
 	var offset := Vector2(0, 3) if is_pressed() else Vector2(0, -2) if is_hovered() else Vector2.ZERO

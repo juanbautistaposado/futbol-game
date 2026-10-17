@@ -1,0 +1,64 @@
+{
+  "assets": [
+    {
+      "file": "apps/free-kick-3d/ui/play-modes/individual.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "sha256": "4ff55c805735162468c3e588a092b178053fe386d351451e2f7d0d65a7dbbcab",
+      "tool": "OpenAI built-in image_gen",
+      "created": "2026-10-12",
+      "prompt": "individual.prompt.txt",
+      "edit_prompt": null,
+      "source": "Generated original football poster art for this project; reference menu used for composition only; no third-party game images shipped",
+      "import_settings": {
+        "compression": "lossless",
+        "mipmaps": true,
+        "sampling": "linear with mipmaps"
+      },
+      "status": "validated in Godot at 1280x720, 960x540, 1920x984",
+      "embedded_prompt": "individual.prompt.txt"
+    },
+    {
+      "file": "apps/free-kick-3d/ui/play-modes/duel.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "sha256": "3c2402364bfe885c392fd39b9a23294606f3f607e628cec00888f69ab4e4a3d7",
+      "tool": "OpenAI built-in image_gen",
+      "created": "2026-10-12",
+      "prompt": "duel.prompt.txt",
+      "edit_prompt": null,
+      "source": "Generated original football poster art for this project; reference menu used for composition only; no third-party game images shipped",
+      "import_settings": {
+        "compression": "lossless",
+        "mipmaps": true,
+        "sampling": "linear with mipmaps"
+      },
+      "status": "validated in Godot at 1280x720, 960x540, 1920x984",
+      "embedded_prompt": "duel.prompt.txt"
+    },
+    {
+      "file": "apps/free-kick-3d/ui/play-modes/group.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "sha256": "4b15be5c56ac0f3bf79e74afd7e6a0dd48285d24d28b35e3b31333a4c1895066",
+      "tool": "OpenAI built-in image_gen",
+      "created": "2026-10-12",
+      "prompt": "group.prompt.txt",
+      "edit_prompt": "group-edit.prompt.txt",
+      "source": "Generated original football poster art for this project; reference menu used for composition only; no third-party game images shipped",
+      "import_settings": {
+        "compression": "lossless",
+        "mipmaps": true,
+        "sampling": "linear with mipmaps"
+      },
+      "status": "validated in Godot at 1280x720, 960x540, 1920x984",
+      "embedded_prompt": "group-edit.prompt.txt"
+    }
+  ]
+}

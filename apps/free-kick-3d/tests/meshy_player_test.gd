@@ -21,7 +21,7 @@ func run() -> void:
 	var kicker = game.kicker
 	var avatar: Node3D = kicker.footballer_visual
 	var body: MeshInstance3D = avatar.get_node("FootballerRig/Skeleton3D/FootballerBody")
-	assert(body.mesh.get_surface_count() == 2)
+	assert(body.mesh.get_surface_count() == 10, "Cabeza anatómica y cavidades separadas del cuerpo y de los ojos")
 	assert(body.mesh.surface_get_material(0).resource_name == "MeshyPlayer")
 	assert((avatar.get_node("FootballerRig/Skeleton3D") as Skeleton3D).get_bone_count() == 53)
 	for clip in ["Idle", "Kick", "Celebrate"]:

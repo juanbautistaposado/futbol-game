@@ -1,0 +1,33 @@
+{
+  "role": "striker",
+  "source": "source-assets/footballer/meshy_striker_head.blend",
+  "removed_head_faces": 40769,
+  "triangles": 335413,
+  "vertices": 210444,
+  "animation_channels_preserved": 1272,
+  "eye_centers_blender": {
+    "-1": [
+      -0.030637525022029877,
+      -0.07552172243595123,
+      1.764074683189392
+    ],
+    "1": [
+      0.030637525022029877,
+      -0.07552172243595123,
+      1.7640745639801025
+    ]
+  },
+  "materials": [
+    "MeshyPlayer",
+    "Jersey",
+    "TailoredShorts",
+    "CollarKnit",
+    "HairGroom",
+    "BeardGroom",
+    "BrowGroom",
+    "FaceSkin",
+    "FaceInterior",
+    "EyeSurface"
+  ],
+  "sha256": "acf77b9a3317bb9979dfb6ad78f1f38b22c5b52718c35a097d126bfa7219c87e"
+}

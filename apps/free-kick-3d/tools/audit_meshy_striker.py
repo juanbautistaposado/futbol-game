@@ -4,6 +4,11 @@ import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
+cloth_report = ROOT / 'docs/research/cloth-quality-2026-10-11/striker.json'
+if cloth_report.exists() and json.loads(cloth_report.read_text())['runtime_sha256'] == hashlib.sha256((ROOT / 'apps/free-kick-3d/assets/footballer/meshy_striker.glb').read_bytes()).hexdigest():
+    from audit_player_cloth import audit
+    audit('striker')
+    raise SystemExit(0)
 helper = Path(__file__).with_name('audit_meshy_export.py')
 namespace = {'__file__': str(helper)}
 exec(helper.read_text().split('exports = []')[0], namespace)

@@ -1,0 +1,32 @@
+[
+  {
+    "test": "custom_players",
+    "exit_code": 0,
+    "passed": true
+  },
+  {
+    "test": "meshy_player",
+    "exit_code": 0,
+    "passed": true
+  },
+  {
+    "test": "meshy_keeper",
+    "exit_code": 0,
+    "passed": true
+  },
+  {
+    "test": "striker_animation",
+    "exit_code": 0,
+    "passed": true
+  },
+  {
+    "test": "keeper_animation",
+    "exit_code": 0,
+    "passed": true
+  },
+  {
+    "test": "character_editor",
+    "renderer": "native OpenGL",
+    "passed": true
+  }
+]

@@ -1,0 +1,8 @@
+Tool: OpenAI image_gen, built-in mode. Generated 2026-10-14.
+
+Use case: photorealistic-natural. Asset type: seamless tileable physically based skin microdetail albedo texture for a 3D football athlete, square 1024x1024. Generate an extreme macro, flat orthographic dermatological texture of healthy adult male medium warm tan facial skin, evenly sized fine natural pores, very subtle irregular pigmentation, occasional tiny follicle pits, fine organic lines. This is a homogeneous material swatch, NOT a face or body part. Soft completely uniform diffuse illumination with NO directional shadows, NO shiny highlights, no large creases, no scars, no moles, no hairs, no freckles, no borders, no gradient. Ultra subtle low contrast, all pores equally sharp across the flat texture. The edges must tile seamlessly in both axes. Real human skin texture, avoid orange peel, sand, leather, fabric, cracks, dots on a regular grid. No text or labels.
+
+The returned image is 1254x1254. Original PNG and metadata copied intact into
+apps/free-kick-3d/assets/footballer/skin_microdetail.png. Runtime uses only
+restrained high-frequency luminance/gradient detail; selected skin pigment
+continues to come from the character editor. Mipmaps and anisotropic sampling.

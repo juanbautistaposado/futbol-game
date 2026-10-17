@@ -1,0 +1,22 @@
+{
+  "role": "keeper",
+  "source_blend": "source-assets/footballer/meshy_keeper_cloth_v2.blend",
+  "baseline": "source-assets/footballer/meshy_keeper.blend",
+  "vertices": 45905,
+  "triangles_before": 101904,
+  "triangles_after": 91826,
+  "crotch_weight_vertices": 8435,
+  "jersey_boundary_faces_fixed": 1376,
+  "animation_channels_exact": 1272,
+  "runtime_sha256": "fc6c939ac82c8f4bad5b01eeb406b84d072e4b9c7423c811011ff3d2ef926a3a",
+  "license": "CC-BY-4.0",
+  "author": "Meshy AI; cloth adaptation by this project",
+  "export_audit": {
+    "rig_and_clips_exact": true,
+    "face_hair_boots_uv_weights_exact": true,
+    "triangles": 91826,
+    "reduction_percent": 9.89,
+    "maximum_weight_error": 1.341104507446289e-07,
+    "bytes": 9198556
+  }
+}

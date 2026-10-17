@@ -1,0 +1,29 @@
+{
+  "date": "2026-10-14",
+  "engine": "Godot 4.7.1 / Compatibility",
+  "models": [
+    {"role": "striker", "runtime": "apps/free-kick-3d/assets/footballer/meshy_striker.glb", "source": "source-assets/footballer/meshy_striker_realism.blend", "audit": "docs/research/player-realism-2026-10-14/striker.json"},
+    {"role": "keeper", "runtime": "apps/free-kick-3d/assets/footballer/meshy_keeper.glb", "source": "source-assets/footballer/meshy_keeper_realism.blend", "audit": "docs/research/player-realism-2026-10-14/keeper.json"}
+  ],
+  "model_provenance": "Derived from the existing Meshy AI athlete, CC BY 4.0; project-authored geometry/material adaptation. Existing in-game attribution retained.",
+  "asset": "apps/free-kick-3d/assets/footballer/skin_microdetail.png",
+  "source_tool": "OpenAI image_gen (built-in)",
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "sha256": "ed8b06c9fafeb2ffc354e90ab06d47dbc3081e22b5896c7b9c15da2732d09ddf",
+  "prompt": "source-assets/footballer/realism-2026-10-14/skin.prompt.txt",
+  "provenance": "Generated for this project; no third-party scan or EA texture",
+  "import": {
+    "mipmaps": true,
+    "filter": "linear_mipmap_anisotropic",
+    "usage": "Shared skin microdetail sampled at UV0*4, no extra texture per identity"
+  },
+  "edge_qa": {
+    "mean_horizontal_edge_difference": 0.03873304771137588,
+    "mean_vertical_edge_difference": 0.0472203979943918,
+    "mean_neighbor_difference": 0.02724264280035074,
+    "interpretation": "Not a mathematically seamless scan; high-pass blending at low amplitude limits edge contrast."
+  }
+}

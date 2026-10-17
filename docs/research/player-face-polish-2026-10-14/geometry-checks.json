@@ -1,0 +1,52 @@
+[
+  {
+    "role": "striker",
+    "nape_rays": 525,
+    "minimum_nape_clearance_m": 0.0012620538473129272,
+    "beard_strands": 8500,
+    "maximum_beard_root_gap_m": 0.0001402737107127905,
+    "beard_length_range_m": [
+      0.002000674657698932,
+      0.009763983312838983
+    ],
+    "eye_apertures_z_m": [
+      [
+        1.758,
+        1.76825
+      ],
+      [
+        1.758,
+        1.76825
+      ]
+    ],
+    "eyeball_geometry_exact": true,
+    "eye_normal_drift": 8.32676887512207e-05,
+    "blink_closes_iris": true,
+    "mask_exported": true
+  },
+  {
+    "role": "keeper",
+    "nape_rays": 525,
+    "minimum_nape_clearance_m": 0.0012620538473129272,
+    "beard_strands": 8500,
+    "maximum_beard_root_gap_m": 0.0001402737107127905,
+    "beard_length_range_m": [
+      0.002000674657698932,
+      0.009763983312838983
+    ],
+    "eye_apertures_z_m": [
+      [
+        1.758,
+        1.76825
+      ],
+      [
+        1.758,
+        1.76825
+      ]
+    ],
+    "eyeball_geometry_exact": true,
+    "eye_normal_drift": 8.32676887512207e-05,
+    "blink_closes_iris": true,
+    "mask_exported": true
+  }
+]

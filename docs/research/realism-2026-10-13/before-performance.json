@@ -1,0 +1,15 @@
+{
+	"average_frame_ms": 5.4764,
+	"draw_calls": 355.000000000001,
+	"frames": 240,
+	"p95_frame_ms": 7.644,
+	"quality": "alto",
+	"rendered_primitives": 1172842.0,
+	"renderer": "gl_compatibility",
+	"resolution": [
+		1280,
+		720
+	],
+	"scope": "Native debug executable on this machine, fixed attack view; not release web/mobile FPS",
+	"texture_memory_bytes": 154197684.0
+}

@@ -1,0 +1,27 @@
+[
+  {
+    "test": "custom_players",
+    "passed": true,
+    "output": "Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org\n\nPASS: nueva base 3D, piel/cabello/camiseta/short/barba/dorsal independientes y persistentes para ambos roles"
+  },
+  {
+    "test": "meshy_player",
+    "passed": true,
+    "output": "Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org\n\nPASS: selecci\u00f3n persistente, modelo Meshy completo, dorsal, patada y cambio de turnos"
+  },
+  {
+    "test": "meshy_keeper",
+    "passed": true,
+    "output": "Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org\n\nPASS: ambos arqueros usan PLAYER, color/dorsal independientes y captura conserva las manos"
+  },
+  {
+    "test": "striker_animation",
+    "passed": true,
+    "output": "Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org\n\nPASS: staggered preparation, grounded breathing, seamless boundaries, alternating steps, planted support, preserved impact and physics synchronization"
+  },
+  {
+    "test": "keeper_animation",
+    "passed": true,
+    "output": "Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org\n\nPASS: guardia, reacci\u00f3n, alcance, pausa, aterrizaje, recuperaci\u00f3n, parada central y reset"
+  }
+]

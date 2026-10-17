@@ -1,0 +1,15 @@
+{
+  "date": "2026-10-12",
+  "tool": "built-in image_gen",
+  "reference": "apps/free-kick-3d/ui/brand/configure-raster.png",
+  "prompt": "source-assets/ui/character-button/personaje.prompt.txt",
+  "original": "source-assets/ui/character-button/personaje-generated.png",
+  "asset": "apps/free-kick-3d/ui/brand/personaje-raster.png",
+  "dimensions": [
+    2171,
+    724
+  ],
+  "sha256": "438b35339e3f3ad46170063b3fdf08225ca2e300debec3e9e247e764bbfd7a0a",
+  "normalization": "Original generated RGBA preserved without edits",
+  "import": "lossless, mipmaps, LINEAR_WITH_MIPMAPS"
+}

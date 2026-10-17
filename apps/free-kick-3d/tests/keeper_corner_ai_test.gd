@@ -22,16 +22,20 @@ func run() -> void:
 		game.save_path = "/tmp/futbol-keeper-corner-ai.cfg"
 		root.add_child(game)
 		game.start_attack()
-		game.launch_ball(Vector3(corner.x, corner.y, -game.GOAL_Z - 0.3), 1.22, -1)
-		game.away_keeper.dive(signf(corner.x) * 3.10, corner.dive_y, 0.45)
+		check(game.away_keeper.position.is_equal_approx(game.away_keeper.rest_position), "El bot debe empezar cada estirada desde el centro")
+		game.difficulty = "medio"
+		game.shot_power = 1.0
+		game.launch_ball(Vector3(corner.x, corner.y, -game.GOAL_Z - 0.3), lerpf(1.65, 0.75, game.shot_power), -1)
+		game.keeper_rng.seed = 7192
+		game.move_keeper_for_attack(1.0)
 		for i in range(150):
 			if game.resolved:
 				break
 			await create_timer(0.01).timeout
 		check(game.resolved and game.status_label.text.contains("Atajada"),
-			"El arquero rival debe poder llegar al ángulo %s si lee bien el tiro" % corner.name)
+			"El bot debe interceptar el tiro fuerte al ángulo %s cuando elige el lado correcto" % corner.name)
 		print("%s: %s" % [corner.name, game.status_label.text])
 		game.queue_free()
 		await process_frame
-	print("PASS: el arquero rival puede cubrir los cuatro ángulos" if failures == 0 else "FAIL: %d" % failures)
+	print("PASS: el bot llega desde el centro a los cuatro ángulos con potencia máxima" if failures == 0 else "FAIL: %d" % failures)
 	quit(1 if failures > 0 else 0)

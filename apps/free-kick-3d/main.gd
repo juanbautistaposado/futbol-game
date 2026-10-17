@@ -1,6 +1,6 @@
 extends Node3D
 
-var shot_limit := 7
+var shot_limit := 5
 var player_count := 1
 var active_player := 0
 var local_scores: Array[int] = []
@@ -13,6 +13,7 @@ const AI_SHOT_FLIGHT_TIME := 1.22
 const ShotMeter = preload("res://shot_meter.gd")
 const Keeper = preload("res://keeper.gd")
 const GraphicsQuality = preload("res://graphics_quality.gd")
+const ShotTactics = preload("res://shot_tactics.gd")
 
 
 enum Phase { ATTACK, DEFEND, RESOLVING, FINISHED, KICKING }
@@ -30,6 +31,13 @@ var kicker: Node3D
 var hit_woodwork := false
 var previous_ball_position := Vector3.ZERO
 var keeper_rng := RandomNumberGenerator.new()
+var ai_shot_target := Vector3.ZERO
+var ai_shot_crossed := false
+var last_ai_shot_crossed := false
+var defense_windup := false
+var defense_dive_time := -1.0
+var last_shot_target := Vector3.ZERO
+var last_aim_target := Vector3.ZERO
 
 var ball_effect: Tween
 var holding_keeper: Keeper
@@ -39,6 +47,7 @@ var ball: RigidBody3D
 var away_keeper: Keeper
 var home_keeper: Keeper
 var camera: Camera3D
+var weather: Node3D
 var status_label: Label
 var score_label: Label
 var score_detail: Label
@@ -69,6 +78,7 @@ var is_charging := false
 
 func _ready() -> void:
 	load_best_score()
+	keeper_rng.randomize()
 	local_scores.resize(player_count)
 	local_scores.fill(0)
 	create_world()
@@ -82,7 +92,6 @@ func _ready() -> void:
 	kicker = preload("res://kicker.gd").new()
 	add_child(kicker)
 	kicker.scale = Vector3.ONE * 1.15
-	keeper_rng.randomize()
 	aim_marker = create_aim_marker()
 	create_interface()
 	match_audio = preload("res://match_audio.gd").new()
@@ -106,14 +115,16 @@ func _process(delta: float) -> void:
 			resolve_shot(false, "¡Palo y afuera!" if hit_woodwork else "¡Afuera!")
 	if phase == Phase.DEFEND and not ball_in_flight:
 		defense_countdown -= delta
+		if defense_countdown <= 0.35:
+			kicker.prepare_shot(ai_shot_target, ai_shot_crossed)
 		if defense_countdown <= 0.0:
 			fire_ai_shot()
 	update_aim_label()
-	if phase == Phase.DEFEND and defense_target.visible:
+	if defense_active() and defense_target.visible:
 		refresh_defense_target()
 
 func _unhandled_input(event: InputEvent) -> void:
-	if phase == Phase.RESOLVING or phase == Phase.KICKING:
+	if phase == Phase.RESOLVING or (phase == Phase.KICKING and not defense_windup):
 		return
 	if phase == Phase.FINISHED:
 		if event is InputEventKey and event.pressed and event.keycode == KEY_SPACE:
@@ -125,7 +136,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			return
 		if phase == Phase.ATTACK and not ball_in_flight:
 			set_attack_target_from_screen(event.position)
-		elif phase == Phase.DEFEND and not keeper_dived:
+		elif defense_active() and not keeper_dived:
 			preview_defense_target(event.position)
 		return
 
@@ -141,7 +152,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			elif is_charging:
 				is_charging = false
 				fire_player_shot()
-		elif phase == Phase.DEFEND and event.pressed:
+		elif defense_active() and event.pressed:
 			dive_home_keeper_from_screen(event.position)
 		return
 
@@ -155,7 +166,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			elif is_charging:
 				is_charging = false
 				fire_player_shot()
-		elif phase == Phase.DEFEND:
+		elif defense_active():
 			if event.pressed and not keeper_dived:
 				touch_aiming = true
 				preview_defense_target(event.position)
@@ -167,7 +178,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventScreenDrag:
 		if phase == Phase.ATTACK and is_charging:
 			set_attack_target_from_screen(event.position)
-		elif phase == Phase.DEFEND and touch_aiming and not keeper_dived:
+		elif defense_active() and touch_aiming and not keeper_dived:
 			preview_defense_target(event.position)
 		return
 
@@ -180,7 +191,7 @@ func _unhandled_input(event: InputEvent) -> void:
 				fire_player_shot()
 		return
 
-	if event is InputEventKey and event.pressed and not event.echo and phase == Phase.DEFEND:
+	if event is InputEventKey and event.pressed and not event.echo and defense_active():
 		if event.keycode == KEY_W or event.keycode == KEY_UP:
 			keeper_height = 1
 			defense_aim.y = 2.65
@@ -208,25 +219,22 @@ func create_world() -> void:
 	sky_material.ground_bottom_color = Color("33444a")
 	sky.sky_material = sky_material
 	settings.sky = sky
-	settings.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	settings.ambient_light_color = Color("c5d2d8")
-	settings.ambient_light_energy = 0.51
-	settings.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	environment.environment = settings
 	add_child(environment)
 
 	var sun := DirectionalLight3D.new()
-	sun.rotation_degrees = Vector3(-40.0, -35.0, 0.0)
-	sun.light_color = Color("fff0d9")
-	sun.light_energy = 0.96
-	sun.directional_shadow_max_distance = 145.0
-	sun.shadow_enabled = true
+	preload("res://pitch_lighting.gd").apply_environment(settings, sun)
 	add_child(sun)
 
 	camera = Camera3D.new()
 	camera.current = true
 	camera.fov = 55.0
 	add_child(camera)
+
+	weather = preload("res://match_weather.gd").new()
+	weather.name = "MatchWeather"
+	add_child(weather)
+	weather.configure(settings, sun, camera)
 
 func create_pitch() -> void:
 	var pitch := create_static_box("pitch", Vector3(0, -0.15, 0), Vector3(76, 0.3, 115), Color.WHITE)
@@ -421,7 +429,7 @@ func create_interface() -> void:
 	help_style.texture_margin_right = 0
 	help_style.texture_margin_top = 0
 	help_style.texture_margin_bottom = 0
-	help_style.content_margin_left = 28
+	help_style.content_margin_left = 60
 	help_style.content_margin_right = 22
 	help_style.content_margin_top = 8
 	help_style.content_margin_bottom = 8
@@ -462,7 +470,8 @@ func make_label(location: Vector2, font_size: int, color: Color) -> Label:
 func start_attack() -> void:
 	match_overlay.result_label.hide()
 	phase = Phase.ATTACK
-	hint_label.offset_right = 620
+	defense_windup = false
+	hint_label.offset_right = minf(620, get_viewport().get_visible_rect().size.x - 500)
 	hint_label.offset_top = -64
 	is_charging = false
 	shot_power = 0.0
@@ -480,12 +489,13 @@ func start_attack() -> void:
 	kicker.reset_pose(ball.position, -1)
 	look_from_kicker()
 	status_label.text = ("TIRO · MS %s" % (turn - shot_limit) if sudden_death else "TIRO %s" % turn_label()) if player_count == 1 else "J%s · TIRO %s" % [active_player + 1, turn_label()]
-	hint_label.text = "Apuntá · Mantené clic · Soltá en el centro"
+	hint_label.text = "Variá tus tiros · Apuntá · Soltá en verde"
 	update_score()
 
 func start_defense() -> void:
 	match_overlay.result_label.hide()
 	phase = Phase.DEFEND
+	defense_windup = false
 	hint_label.offset_right = get_viewport().get_visible_rect().size.x - 24
 	hint_label.offset_top = -80
 	shot_meter.hide()
@@ -496,6 +506,7 @@ func start_defense() -> void:
 	keeper_lane = 0
 	keeper_height = 0
 	keeper_dived = false
+	defense_dive_time = -1.0
 	touch_aiming = false
 	defense_aim = Vector2(0.0, 1.45)
 	defense_countdown = 2.2
@@ -503,10 +514,13 @@ func start_defense() -> void:
 	var rival_index := randi_range(0,2)
 	kicker.apply_identity(rival_index,preload("res://footballer_model.gd").PROFILES[rival_index].name,randi_range(7,11))
 	kicker.reset_pose(ball.position, 1)
+	# Lock the shot and any opposite-side feint before the player commits a dive.
+	ai_shot_target = Vector3(randf_range(-2.9, 2.9), randf_range(0.55, 2.25), GOAL_Z + 0.3)
+	ai_shot_crossed = ShotTactics.lane(ai_shot_target.x) != 0 and randf() < 0.30
 	look_from_keeper()
 	refresh_defense_target()
 	status_label.text = "ATAJÁS · MS %s" % (turn - shot_limit) if sudden_death else "ATAJÁS %s" % turn_label()
-	hint_label.text = "Esperá el remate · Mouse: apuntá y hacé clic · Táctil: arrastrá y soltá · ← / ESPACIO / →, W alta / S baja"
+	hint_label.text = "Observá la salida de la pelota · Clic para estirarte · ← / ESPACIO / →, W alta / S baja"
 	update_score()
 
 func fire_player_shot() -> void:
@@ -517,13 +531,14 @@ func fire_player_shot() -> void:
 	last_accuracy = shot_meter.accuracy()
 	shot_meter.lock_shot()
 	var target := player_shot_target(last_accuracy)
+	last_aim_target = Vector3(aim_x * 3.7, 1.5 + aim_y * 1.1, target.z)
 	is_charging = false
 	aim_marker.hide()
 	kicker.kick(func() -> void:
 		phase = Phase.ATTACK
 		match_audio.play_effect("kick", ball.global_position)
 		launch_ball(target, lerpf(1.65, 0.75, shot_power), -1)
-		move_keeper_for_attack(target)
+		move_keeper_for_attack()
 		status_label.text = "%s · precisión %d%%" % [shot_meter.feedback, roundi(last_accuracy * 100)]
 	)
 
@@ -531,6 +546,7 @@ func launch_ball(target: Vector3, flight_time: float, side: int) -> void:
 	ball.freeze = false
 	ball_in_flight = true
 	shot_goal = side
+	last_shot_target = target
 	shot_time = 0.0
 	resolved = false
 	hit_woodwork = false
@@ -592,13 +608,13 @@ func refresh_defense_target() -> void:
 	defense_target.show_target(defense_goal_rect(), defense_screen_from_target(defense_aim), keeper_dived)
 
 func preview_defense_target(screen_position: Vector2) -> void:
-	if phase != Phase.DEFEND or keeper_dived:
+	if not defense_active() or keeper_dived:
 		return
 	defense_aim = defense_target_from_screen(screen_position)
 	defense_target.set_target(defense_screen_from_target(defense_aim))
 
 func dive_home_keeper_from_screen(screen_position: Vector2) -> void:
-	if phase != Phase.DEFEND or keeper_dived:
+	if not defense_active() or keeper_dived:
 		return
 	defense_aim = defense_target_from_screen(screen_position)
 	keeper_lane = -1 if defense_aim.x < -1.25 else 1 if defense_aim.x > 1.25 else 0
@@ -616,14 +632,15 @@ func keeper_wrong_way_chance() -> float:
 
 func keeper_read(target: Vector3, roll: float) -> Vector3:
 	var error := 0.18 if difficulty == "dificil" else 0.45
-	var reach := 0.95 if difficulty == "dificil" else 0.82
+	var reach := 0.82 if difficulty == "facil" else 1.0 if difficulty == "dificil" else 0.91
 	var read_x := target.x + keeper_rng.randf_range(-error,error)
 	if roll < keeper_wrong_way_chance():
 		read_x = -signf(target.x) * 3.1 if absf(target.x) > 0.2 else (3.1 if keeper_rng.randf() > 0.5 else -3.1)
 		return Vector3(read_x,0.8,0)
 	return Vector3(clampf(read_x*reach,-3.25,3.25),clampf(target.y*0.75,0.65,1.6),0)
 
-func move_keeper_for_attack(target: Vector3, decision_roll := -1.0) -> void:
+func move_keeper_for_attack(decision_roll := -1.0) -> void:
+	var target := last_shot_target
 	var delay := 0.12 if difficulty == "dificil" else 0.24
 	var roll := keeper_rng.randf() if decision_roll < 0.0 else decision_roll
 	var read := keeper_read(target,roll)
@@ -643,25 +660,31 @@ func move_keeper_for_attack(target: Vector3, decision_roll := -1.0) -> void:
 	delay = maxf(delay,arrival-0.43)
 	away_keeper.dive(read.x,read.y,keeper_rng.randf_range(delay-0.025,delay+0.025))
 
+func defense_active() -> bool:
+	return phase == Phase.DEFEND or (phase == Phase.KICKING and defense_windup)
+
 func fire_ai_shot() -> void:
 	if phase != Phase.DEFEND or ball_in_flight:
 		return
 	phase = Phase.KICKING
+	defense_windup = true
 	ball.freeze = true
-	var target := Vector3(randf_range(-2.9, 2.9), randf_range(0.55, 2.25), GOAL_Z + 0.3)
+	kicker.prepare_shot(ai_shot_target, ai_shot_crossed)
+	var target := ai_shot_target
+	var crossed := ai_shot_crossed
 	kicker.kick(func() -> void:
 		phase = Phase.DEFEND
+		defense_windup = false
 		match_audio.play_effect("kick", ball.global_position)
 		launch_ball(target,AI_SHOT_FLIGHT_TIME,1)
-		var lane := "izquierda" if target.x < -0.85 else "derecha" if target.x > 0.85 else "centro"
-		var height := "alto" if target.y > 1.7 else "bajo" if target.y < 1.0 else "medio"
-		status_label.text = "¡Tiro %s %s!" % [lane, height]
+		last_ai_shot_crossed = crossed
+		status_label.text = "¡Remate!"
 		if not keeper_dived:
 			hint_label.text = "¡Estirate ahora! Apuntá al balón y clic, o arrastrá y soltá · ← / ESPACIO / →, W alta / S baja"
 	)
 
 func dive_home_keeper(lane: int) -> void:
-	if phase != Phase.DEFEND or keeper_dived:
+	if not defense_active() or keeper_dived:
 		return
 	keeper_lane = lane
 	var y := 1.6 if keeper_height > 0 else 0.65 if keeper_height < 0 else 1.15
@@ -669,6 +692,7 @@ func dive_home_keeper(lane: int) -> void:
 	commit_home_keeper_dive(keeper_lane * 3.10, y)
 
 func commit_home_keeper_dive(x: float, y: float) -> void:
+	defense_dive_time = shot_time if ball_in_flight else -1.0
 	keeper_dived = true
 	touch_aiming = false
 	defense_target.set_target(defense_screen_from_target(defense_aim), true)
@@ -744,6 +768,10 @@ func resolve_shot(scored: bool, message: String, keep_ball_moving := false) -> v
 	if scored:
 		show_net_goal()
 	status_label.text = message
+	shot_meter.hide()
+	hint_label.offset_right = get_viewport().get_visible_rect().size.x - 24
+	hint_label.offset_top = -100
+	hint_label.text = shot_explanation(scored, message)
 	var headline := "¡GOL!" if scored else "¡ATAJADA!" if message == "¡Atajada!" else "¡FUERA!"
 	if hit_woodwork and message != "¡Atajada!": headline = "¡PALO Y GOL!" if scored else "¡PALO Y FUERA!"
 	match_overlay.show_result(headline,preload("res://ui/visual_theme.gd").SUCCESS if scored else preload("res://ui/visual_theme.gd").ENERGY)
@@ -752,13 +780,40 @@ func resolve_shot(scored: bool, message: String, keep_ball_moving := false) -> v
 	defense_target.hide()
 	var timer := Timer.new()
 	timer.one_shot = true
-	timer.wait_time = 1.9 if keep_ball_moving else 1.25
+	timer.wait_time = 2.3
 	add_child(timer)
 	timer.timeout.connect(func() -> void:
 		timer.queue_free()
 		advance_after_shot()
 	)
 	timer.start()
+
+func shot_explanation(scored: bool, message: String) -> String:
+	if hit_woodwork:
+		return "Pegó en el palo: dejá más margen al apuntar."
+	if shot_goal == -1:
+		if absf(last_aim_target.x) > GOAL_WIDTH * 0.5 - BALL_RADIUS or last_aim_target.y > GOAL_HEIGHT - BALL_RADIUS:
+			return "Apuntaste al borde o fuera del arco: dejá más margen."
+		if last_accuracy < 0.7:
+			return "El timing desvió el tiro: soltá más cerca del centro verde."
+		if scored:
+			return "Buena colocación: la pelota quedó fuera de su alcance."
+		return "El arquero llegó al tiro: buscá más distancia de su posición." if message == "¡Atajada!" else "El tiro salió afuera: ajustá la mira y el timing."
+	if not scored:
+		return "Buena lectura y timing: interceptaste la pelota." if message == "¡Atajada!" else "El rival falló el remate."
+	if not keeper_dived:
+		return "No te estiraste: leé la postura y reaccioná al remate."
+	if ShotTactics.lane(defense_aim.x) != ShotTactics.lane(last_shot_target.x):
+		if last_ai_shot_crossed and ShotTactics.lane(defense_aim.x) == -ShotTactics.lane(last_shot_target.x):
+			return "Te engañó con un remate cruzado: seguí la pelota al salir."
+		return "Elegiste otro lado: observá la carrera y la salida de la pelota."
+	if absf(defense_aim.y - last_shot_target.y) > 0.7:
+		return "La altura no coincidió: ajustá la mira antes de estirarte."
+	if defense_dive_time < 0.15:
+		return "Te estiraste muy pronto: esperá un poco más antes de comprometerte."
+	if defense_dive_time > 0.8:
+		return "Te estiraste tarde: usá la postura para anticipar el remate."
+	return "La estirada no alcanzó la pelota: ajustá el punto y el timing."
 
 func advance_after_shot() -> void:
 	ball.freeze = false
@@ -901,10 +956,10 @@ func turn_label() -> String:
 	return "muerte súbita %s" % (turn - shot_limit) if sudden_death else "%s/%s" % [turn, shot_limit]
 
 func load_best_score() -> void:
+	shot_limit = 5
+	player_count = 1
 	var profile := ConfigFile.new()
 	if profile.load(save_path) == OK:
-		shot_limit = clampi(int(profile.get_value("settings", "shots", 7)), 5, 15)
-		player_count = clampi(int(profile.get_value("settings", "players", 1)), 1, 4)
 		best_score = int(profile.get_value("scores", "shots_%s" % shot_limit, 0))
 		difficulty = str(profile.get_value("settings", "difficulty", "medio"))
 		player_name = str(profile.get_value("appearance", "name", "Jugador"))

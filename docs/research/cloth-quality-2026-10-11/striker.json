@@ -1,0 +1,22 @@
+{
+  "role": "striker",
+  "source_blend": "source-assets/footballer/meshy_striker_cloth_v2.blend",
+  "baseline": "source-assets/footballer/meshy_striker.blend",
+  "vertices": 45905,
+  "triangles_before": 101904,
+  "triangles_after": 91826,
+  "crotch_weight_vertices": 8435,
+  "jersey_boundary_faces_fixed": 140,
+  "animation_channels_exact": 1272,
+  "runtime_sha256": "ba3fd406a03d3b368ebd801ff0531073363e78749768556c4d264336d5b4caa2",
+  "license": "CC-BY-4.0",
+  "author": "Meshy AI; cloth adaptation by this project",
+  "export_audit": {
+    "rig_and_clips_exact": true,
+    "face_hair_boots_uv_weights_exact": true,
+    "triangles": 91826,
+    "reduction_percent": 9.89,
+    "maximum_weight_error": 1.341104507446289e-07,
+    "bytes": 9190132
+  }
+}

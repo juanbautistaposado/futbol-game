@@ -7,36 +7,34 @@ const GraphicsQuality = preload("res://graphics_quality.gd")
 const SmoothPolygon = preload("res://ui/smooth_polygon.gd")
 const HOME_POSTER_SCALE := 0.8
 const HOME_POSTER_OFFSET := Vector2(0, 80)
+const CharacterEditor = preload("res://ui/character_editor.gd")
+const HomePlayerPreview = preload("res://ui/home_player_preview.gd")
 var smooth_polygons := SmoothPolygon.new()
 var background: Node3D
 var editing_role := "striker"
 var home_screen := true
+var home_player_preview: Control
 var profile := ConfigFile.new()
 var page: Control
 var content: Control
 var play_button: Button
+var character_button: Button
 var difficulty_buttons: Array[Button] = []
 var graphics_buttons: Array[Button] = []
 var difficulty := "medio"
 var graphics_quality := "alto"
 var sound_volume := 0.8
-var shot_count := 7
+var shot_count := 5
 var player_count := 1
 var start_button: Button
-var shot_value: Label
-var player_value: Label
-var setup_summary: Label
-var shot_minus: Button
-var shot_plus: Button
-var player_minus: Button
-var player_plus: Button
+var mode_cards: Array[Button] = []
 
 func _ready() -> void:
 	theme = Visual.create()
 	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	profile.load(save_path)
-	shot_count = clampi(int(profile.get_value("settings", "shots", 7)), 5, 15)
-	player_count = clampi(int(profile.get_value("settings", "players", 1)), 1, 4)
+	shot_count = 5
+	player_count = 1
 	difficulty = str(profile.get_value("settings", "difficulty", "medio"))
 	graphics_quality = GraphicsQuality.normalized(str(profile.get_value("settings", "graphics_quality", "alto")))
 	sound_volume = clampf(float(profile.get_value("settings", "sound_volume", 0.8)), 0.0, 1.0)
@@ -59,6 +57,9 @@ func layout_content() -> void:
 	content.position = (size - Vector2(1024, 640) * ratio) * 0.5
 	if is_instance_valid(page) and page.has_meta("poster_home"):
 		content.position.x = 0
+	background.layout_editor(size, ratio)
+	if is_instance_valid(home_player_preview):
+		home_player_preview.update_bounds()
 	smooth_polygons.clear()
 	queue_redraw()
 
@@ -73,6 +74,28 @@ func _draw() -> void:
 	var bottom := (size.y - content.position.y) / content.scale.y
 	var left := -content.position.x / content.scale.x
 	var right := (size.x - content.position.x) / content.scale.x
+	if page.has_meta("editor"):
+		draw_rect(Rect2(left, top, right - left, 150 - top), Visual.BASE)
+		smooth_polygons.draw(self, PackedVector2Array([Vector2(left, 150), Vector2(454, 150), Vector2(424, 575), Vector2(left, 575)]), Visual.BASE)
+		# The same poster diagonals as the home reach the physical screen edges.
+		smooth_polygons.draw(self, PackedVector2Array([Vector2(left, 150), Vector2(left + 64, 150), Vector2(left, 290)]), Visual.BLUE)
+		smooth_polygons.draw(self, PackedVector2Array([Vector2(left, 310), Vector2(left + 26, 253), Vector2(left + 38, 253), Vector2(left, 336)]), Visual.ACCENT)
+		smooth_polygons.draw(self, PackedVector2Array([Vector2(right - 186, top), Vector2(right, top), Vector2(right, 150), Vector2(right - 256, 150)]), Visual.BLUE)
+		smooth_polygons.draw(self, PackedVector2Array([Vector2(right - 256, 150), Vector2(right - 186, top), Vector2(right - 172, top), Vector2(right - 242, 150)]), Visual.ACCENT)
+		smooth_polygons.draw(self, PackedVector2Array([Vector2(right, 354), Vector2(right, 575), Vector2(right - 102, 575)]), Visual.BLUE)
+		smooth_polygons.draw(self, PackedVector2Array([Vector2(right - 64, 575), Vector2(right, 437), Vector2(right, 466), Vector2(right - 50, 575)]), Visual.ACCENT)
+		draw_rect(Rect2(left, 575, right - left, bottom - 575), Visual.BASE)
+		draw_set_transform(Vector2.ZERO)
+		return
+	if page.has_meta("play_menu"):
+		var backdrop := Visual.BASE
+		backdrop.a = 0.92
+		draw_rect(Rect2(left, top, right - left, bottom - top), backdrop)
+		smooth_polygons.draw(self, PackedVector2Array([Vector2(left, top), Vector2(left + 76, top), Vector2(left, top + 163)]), Visual.BLUE)
+		smooth_polygons.draw(self, PackedVector2Array([Vector2(right - 112, bottom), Vector2(right, bottom - 240), Vector2(right, bottom)]), Visual.BLUE)
+		smooth_polygons.draw(self, PackedVector2Array([Vector2(right - 136, bottom), Vector2(right, bottom - 290), Vector2(right, bottom - 266), Vector2(right - 124, bottom)]), Visual.ACCENT)
+		draw_set_transform(Vector2.ZERO)
+		return
 	if home_screen and page.has_meta("poster_home"):
 		# The frame follows the viewport edges; the poster stays at the left edge.
 		var edge_width := clampf((size.x / size.y - 1.0) / (16.0 / 9.0 - 1.0), 0.35, 1.0)
@@ -98,8 +121,13 @@ func _draw() -> void:
 	draw_set_transform(Vector2.ZERO)
 
 func new_page() -> void:
+	if is_instance_valid(home_player_preview):
+		home_player_preview.deactivate()
+		home_player_preview = null
+	background.set_editor_preview(false)
 	background.frame_home_poster(false)
 	home_screen = false
+	mode_cards.clear()
 	difficulty_buttons.clear()
 	graphics_buttons.clear()
 	queue_redraw()
@@ -152,13 +180,18 @@ func button(text: String, rect: Rect2, action: Callable, primary := false, icon:
 	page.add_child(item)
 	return item
 
-func show_menu() -> void:
+func show_menu(focus_character := false) -> void:
 	background.refresh_player(profile)
 	new_page()
 	home_screen = true
 	page.set_meta("poster_home", true)
 	background.frame_home_poster(true)
 	layout_content()
+	home_player_preview = HomePlayerPreview.new()
+	home_player_preview.name = "HomePlayerPreview"
+	page.add_child(home_player_preview)
+	home_player_preview.configure(background.preview_camera, background.player)
+	home_player_preview.rotation_requested.connect(background.rotate_home)
 	var poster := Control.new()
 	poster.name = "HomePoster"
 	poster.size = Vector2(540, 560)
@@ -172,33 +205,67 @@ func show_menu() -> void:
 	poster.add_child(mark)
 	play_button = preload("res://ui/raster_action.gd").new()
 	play_button.position = Vector2(24, 354)
-	play_button.size = Vector2(514, 142)
+	play_button.size = Vector2(514, 130)
 	play_button.pressed.connect(show_setup)
 	poster.add_child(play_button)
+	character_button = preload("res://ui/raster_action.gd").new()
+	character_button.caption = "Personaje"
+	character_button.artwork = preload("res://ui/brand/personaje-raster.png")
+	character_button.name = "CharacterButton"
+	character_button.position = Vector2(74, 464)
+	character_button.size = Vector2(378, 56)
+	character_button.pressed.connect(show_characters)
+	poster.add_child(character_button)
 	var settings := preload("res://ui/raster_action.gd").new()
 	settings.name = "ConfigureButton"
 	settings.caption = "Configurar"
 	settings.artwork = preload("res://ui/brand/configure-raster.png")
-	settings.position = Vector2(74, 500)
-	settings.size = Vector2(378, 64)
+	settings.position = Vector2(74, 506)
+	settings.size = Vector2(378, 56)
 	settings.pressed.connect(show_settings)
 	poster.add_child(settings)
 	var best := int(profile.get_value("scores", "shots_%s" % shot_count, 0))
 	# Dynamic record keeps its readable type size, outside the scaled artwork.
-	var prefix := label("Mejor marca  ·", Rect2(80, 540, 152, 34), 19, Visual.INK)
+	var prefix := label("Mejor marca  ·", Rect2(80, 546, 152, 34), 19, Visual.INK)
 	prefix.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	prefix.add_theme_font_override("font", Visual.EMPHASIS)
-	var value := label(str(best), Rect2(235, 536, 58, 42), 32, Visual.ENERGY)
+	var value := label(str(best), Rect2(235, 542, 58, 42), 32, Visual.ENERGY)
 	value.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	label("goles", Rect2(291, 541, 80, 34), 19, Visual.INK).horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	label("goles", Rect2(291, 547, 80, 34), 19, Visual.INK).horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 
-	play_button.grab_focus()
+	var home_actions: Array[Control] = [play_button, character_button, settings]
+	for i in range(home_actions.size()):
+		home_actions[i].focus_next = home_actions[i].get_path_to(home_actions[(i + 1) % home_actions.size()])
+		home_actions[i].focus_previous = home_actions[i].get_path_to(home_actions[posmod(i - 1, home_actions.size())])
+		home_actions[i].focus_neighbor_bottom = home_actions[i].focus_next
+		home_actions[i].focus_neighbor_top = home_actions[i].focus_previous
+	if focus_character: character_button.grab_focus()
+	else: play_button.grab_focus()
+
+func show_characters() -> void:
+	background.refresh_player(profile)
+	new_page()
+	page.set_meta("characters", true)
+	home_screen = true
+	queue_redraw()
+	label("PERSONAJE", Rect2(60, 70, 460, 90), 46, Visual.INK).horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	label("Elegí y personalizá tu equipo.", Rect2(64, 176, 420, 44), 21, Visual.MUTED).horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	var striker := button("ELEGIR DELANTERO", Rect2(64, 258, 330, 54), show_strikers, false, Visual.ARROW)
+	striker.name = "ChooseStriker"
+	var keeper := button("ELEGIR ARQUERO", Rect2(64, 336, 330, 54), show_keepers, false, Visual.ARROW)
+	keeper.name = "ChooseKeeper"
+	var back := button("VOLVER", Rect2(64, 545, 300, 54), show_menu.bind(true))
+	var actions: Array[Control] = [striker, keeper, back]
+	for i in range(actions.size()):
+		actions[i].focus_next = actions[i].get_path_to(actions[(i + 1) % actions.size()])
+		actions[i].focus_previous = actions[i].get_path_to(actions[posmod(i - 1, actions.size())])
+	striker.grab_focus()
 
 func show_settings() -> void:
 	new_page()
 	var heading := label("AJUSTES DE JUEGO", Rect2(80, 52, 864, 72), 56, Visual.INK)
 	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	var subtitle := label("Elegí el desafío, tu equipo y el sonido.", Rect2(80, 118, 864, 32), 19, Visual.MUTED)
+	var subtitle := label("Ajustá la dificultad, la imagen y el sonido.", Rect2(80, 118, 864, 32), 19, Visual.MUTED)
 	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	separator(Rect2(80, 178, 864, 1))
 	label("Desafío", Rect2(80, 202, 400, 36), 26).horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
@@ -210,8 +277,6 @@ func show_settings() -> void:
 		option.set_meta("difficulty", values[i])
 		difficulty_buttons.append(option)
 	refresh_difficulty()
-	button("ELEGIR ARQUERO", Rect2(80, 374, 400, 48), show_keepers, false, Visual.ARROW)
-	button("ELEGIR DELANTERO", Rect2(80, 438, 400, 48), show_strikers, false, Visual.ARROW)
 	label("Imagen y sonido", Rect2(544, 202, 400, 36), 26).horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	label("Calidad gráfica", Rect2(544, 251, 400, 30), 18, Visual.MUTED).horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	for i in range(3):
@@ -290,6 +355,8 @@ func refresh_difficulty() -> void:
 		option.add_theme_constant_override("icon_max_width", 18)
 
 func start_game() -> void:
+	shot_count = 5
+	player_count = 1
 	start_button.disabled = true
 	profile.set_value("settings", "shot_mode", "tiro_libre")
 	profile.set_value("settings", "shots", shot_count)
@@ -347,50 +414,53 @@ func _unhandled_input(event: InputEvent) -> void:
 			if editing_role == "keeper": show_keepers()
 			else: show_strikers()
 		elif page.has_meta("roster"):
-			show_settings()
+			show_characters()
+		elif page.has_meta("characters"):
+			show_menu(true)
 		else:
 			show_menu()
 		get_viewport().set_input_as_handled()
 
 func show_setup() -> void:
 	new_page()
-	label("PREPARÁ TU RONDA", Rect2(60, 64, 904, 80), 54, Visual.INK)
-	label("Elegí cuántos jugadores y cuántos tiros tendrá cada uno.", Rect2(40, 144, 944, 46), 22)
-	for x in [80, 544]:
-		var card := preload("res://ui/poster_panel.gd").new()
-		card.position = Vector2(x, 220)
-		card.size = Vector2(400, 176)
-		page.add_child(card)
-	label("Cantidad de tiros", Rect2(90, 230, 380, 40), 26, Visual.INK)
-	label("Cantidad de jugadores", Rect2(554, 230, 380, 40), 26, Visual.INK)
-	shot_minus = button("−", Rect2(110, 283, 54, 54), change_setup.bind(-1, 0))
-	shot_plus = button("+", Rect2(396, 283, 54, 54), change_setup.bind(1, 0))
-	player_minus = button("−", Rect2(574, 283, 54, 54), change_setup.bind(0, -1))
-	player_plus = button("+", Rect2(860, 283, 54, 54), change_setup.bind(0, 1))
-	shot_value = label("", Rect2(174, 270, 212, 76), 60, Visual.ENERGY)
-	player_value = label("", Rect2(638, 270, 212, 76), 60, Visual.INK)
-	label("De 5 a 15 tiros por persona", Rect2(90, 348, 380, 40), 18)
-	label("De 1 a 4 personas, en este dispositivo", Rect2(554, 348, 380, 40), 18)
-	setup_summary = label("", Rect2(40, 405, 944, 32), 20)
-	label("TIROS LIBRES · 24 metros", Rect2(312, 434, 400, 36), 20, Visual.ENERGY)
-	start_button = button("EMPEZAR", Rect2(372, 477, 280, 66), start_game, true)
-	button("VOLVER", Rect2(402, 559, 220, 54), show_menu)
-	refresh_setup()
+	shot_count = 5
+	player_count = 1
+	page.set_meta("play_menu", true)
+	home_screen = true
+	background.player.hide()
+	if is_instance_valid(background.keeper_preview): background.keeper_preview.hide()
+	queue_redraw()
+	label("JUGAR", Rect2(60, 34, 904, 74), 56, Visual.INK).horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	label("Uno contra uno. Vos contra el bot.", Rect2(60, 111, 904, 32), 21, Visual.MUTED).horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	var cover := preload("res://ui/play_mode_card.gd").new()
+	cover.name = "ModeBot"
+	cover.position = Vector2(60, 162)
+	cover.size = Vector2(440, 324)
+	cover.caption = "UNO CONTRA UNO"
+	cover.description = "Vos contra el bot.\nTirá y atajá por turnos."
+	cover.artwork = preload("res://ui/play-modes/individual.png")
+	page.add_child(cover)
+	cover.selected = true
+	mode_cards.append(cover)
+	label("5 TIROS", Rect2(548, 180, 416, 70), 48, Visual.ENERGY).horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	label("Cinco remates por lado.\nTambién te toca atajar.", Rect2(548, 265, 416, 72), 22, Visual.INK).horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	var extra := label("SI HAY EMPATE", Rect2(548, 363, 416, 38), 24, Visual.INK)
+	extra.add_theme_font_override("font", Visual.DISPLAY)
+	extra.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	label("Un tiro extra por lado\nhasta que haya un ganador.", Rect2(548, 411, 416, 70), 21, Visual.MUTED).horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	var back := button("VOLVER", Rect2(60, 563, 178, 56), show_menu)
+	start_button = button("EMPEZAR", Rect2(684, 558, 280, 66), start_game, true, Visual.ARROW)
+	start_button.add_theme_font_override("font", Visual.DISPLAY)
+	start_button.add_theme_font_size_override("font_size", 25)
+	var controls: Array[Control] = [cover, start_button, back]
+	for i in range(controls.size()):
+		controls[i].focus_next = controls[i].get_path_to(controls[(i + 1) % controls.size()])
+		controls[i].focus_previous = controls[i].get_path_to(controls[posmod(i - 1, controls.size())])
+	cover.focus_neighbor_bottom = cover.get_path_to(start_button)
+	start_button.focus_neighbor_left = start_button.get_path_to(back)
+	back.focus_neighbor_right = back.get_path_to(start_button)
 	start_button.grab_focus()
 
-func change_setup(shots_delta: int, players_delta: int) -> void:
-	shot_count = clampi(shot_count + shots_delta, 5, 15)
-	player_count = clampi(player_count + players_delta, 1, 4)
-	refresh_setup()
-
-func refresh_setup() -> void:
-	shot_value.text = str(shot_count)
-	player_value.text = str(player_count)
-	shot_minus.disabled = shot_count == 5
-	shot_plus.disabled = shot_count == 15
-	player_minus.disabled = player_count == 1
-	player_plus.disabled = player_count == 4
-	setup_summary.text = "%s tiros y atajadas contra la IA · Desempate por muerte súbita" % shot_count if player_count == 1 else "Un tiro por jugador en cada vuelta · %s remates en total" % (shot_count * player_count)
 
 func show_strikers() -> void:
 	background.refresh_player(profile)
@@ -413,7 +483,7 @@ func show_strikers() -> void:
 	var generated := button("PLAYER",Rect2(64,497,300,54),select_striker.bind(meshy_index),selected==meshy_index,Visual.CHECK if selected == meshy_index else null)
 	generated.add_theme_font_size_override("font_size", 20)
 	if selected == meshy_index: generated.grab_focus()
-	button("VOLVER",Rect2(64,565,300,54),show_settings)
+	button("VOLVER",Rect2(64,565,300,54),show_characters)
 
 func select_striker(index: int) -> void:
 	profile.set_value("appearance","striker",index)
@@ -439,7 +509,7 @@ func show_keepers() -> void:
 	var custom := button("PERSONALIZADO",Rect2(64,465,300,54),show_custom_keeper,selected==3,Visual.CHECK if selected == 3 else null)
 	custom.add_theme_font_size_override("font_size", 20)
 	if selected == 3: custom.grab_focus()
-	button("VOLVER",Rect2(64,545,300,54),show_settings)
+	button("VOLVER",Rect2(64,545,300,54),show_characters)
 
 func select_keeper(index: int) -> void:
 	profile.set_value("appearance","keeper",index)
@@ -473,51 +543,21 @@ func show_character_editor(role: String) -> void:
 	home_screen = true
 	queue_redraw()
 	page.set_meta("editor", true)
-	label("TU ARQUERO" if role == "keeper" else "TU DELANTERO",Rect2(64,35,420,65),38,Visual.INK).horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	label("Nombre", Rect2(64, 99, 300, 24), 16, Visual.MUTED).horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	var name_input := LineEdit.new()
-	name_input.position = Vector2(64,125)
-	name_input.size = Vector2(300,44)
-	name_input.placeholder_text = "Tu nombre"
-	name_input.max_length = 16
-	name_input.text = str(profile.get_value("appearance",name_key,profile.get_value("appearance","name","Jugador")))
-	name_input.text_changed.connect(func(value: String) -> void:
-		save_appearance(name_key,value.strip_edges() if not value.strip_edges().is_empty() else "Jugador")
-		refresh_character_preview()
+	background.set_editor_preview(true)
+	var editor := CharacterEditor.new()
+	editor.name = "CharacterEditor"
+	editor.configure(profile, role)
+	editor.appearance_changed.connect(func(key: String, value: Variant) -> void:
+		if key in ["name", "number", "keeper_name", "keeper_number"]:
+			save_appearance(key, value)
+			refresh_character_preview()
+		else:
+			save_custom(key, value)
 	)
-	page.add_child(name_input)
-	var fields := ["skin","hair","shirt","shorts"]
-	var captions := ["Piel","Cabello","Camiseta","Short"]
-	var defaults := ["bb8868","29221f","245baa","172f58"]
-	for i in range(4):
-		label(captions[i],Rect2(64,188+i*58,140,44),20).horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-		var picker := ColorPickerButton.new()
-		picker.position = Vector2(224,188+i*58)
-		picker.size = Vector2(140,44)
-		picker.edit_alpha = false
-		picker.color = Color(str(profile.get_value(section,fields[i],defaults[i])))
-		picker.color_changed.connect(func(color: Color) -> void: save_custom(fields[i],color.to_html(false)))
-		page.add_child(picker)
-	var beard := CheckButton.new()
-	beard.text = "Barba"
-	beard.position = Vector2(64,430)
-	beard.size = Vector2(150,44)
-	beard.button_pressed = bool(profile.get_value(section,"beard",false))
-	beard.toggled.connect(func(value: bool) -> void: save_custom("beard",value))
-	page.add_child(beard)
-	var number := SpinBox.new()
-	number.position = Vector2(224,430)
-	number.size = Vector2(140,44)
-	number.min_value = 1
-	number.max_value = 99
-	number.prefix = "N° "
-	number.value = int(profile.get_value("appearance",number_key,profile.get_value("appearance","number",10)))
-	number.value_changed.connect(func(value: float) -> void:
-		save_appearance(number_key,int(value))
-		refresh_character_preview()
-	)
-	page.add_child(number)
-	button("LISTO",Rect2(64,515,300,58),show_keepers if role == "keeper" else show_strikers,true).grab_focus()
+	editor.preview_mode_changed.connect(background.frame_editor)
+	editor.rotation_requested.connect(background.rotate_editor)
+	editor.close_requested.connect(show_keepers if role == "keeper" else show_strikers)
+	page.add_child(editor)
 
 func save_custom(key: String,value: Variant) -> void:
 	profile.set_value("custom_"+editing_role,key,value)

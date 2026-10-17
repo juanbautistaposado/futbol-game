@@ -237,3 +237,22 @@ exportaciones. Se verificó la carga completa con una descarga local ralentizada
 - El paquete público descargado coincide con el build local: SHA-256 de
   `index.pck`:
   `e507ad87a154e6c13916a7a1adf3724f2259fecced4d85b312e64625b8bbd019`.
+
+## Publicación del estado completo — 12 de octubre de 2026
+
+- Producción: `6acd21c43c5519a912af8824`.
+- [URL pública](https://futbol-tiros-libres-3d.netlify.app/).
+- Se regeneró el build release desde el workspace actual, incluidos los recursos
+  nuevos y los cambios aún sin commit: personajes, animaciones, editor de aspecto,
+  estadio, público, césped, materiales e interfaz.
+- La exportación terminó sin errores ni advertencias. Se verificaron menú,
+  configuración de ronda e inicio del partido tanto localmente como en la URL
+  pública, sin sesión de Netlify. La prueba local no registró errores de consola.
+- La consola pública conserva el TypeError de `MutationObserver.observe` sin URL
+  de origen ya observado en publicaciones anteriores; no impidió cargar ni
+  iniciar el partido. No se atribuye al juego sin diagnóstico.
+- El paquete público descargado coincide exactamente con el build probado:
+  SHA-256 de `index.pck`:
+  `fc473558b31dcf251b6bc342f814627358d29c8c4155361f59248e0bdc111c80`.
+- Estas comprobaciones cubren carga y navegación, no todas las partidas ni
+  dispositivos móviles.
